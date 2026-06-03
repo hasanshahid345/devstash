@@ -336,3 +336,10 @@ git switch -c lesson-01-setup
 ---
 
 🏗️ **DevStash — Store Smarter. Build Faster.**
+
+### Screenshots
+
+Refer to the screenshots below as a base for the dashboard UI. Not necessary to be exact, use it as a reference:
+
+- @context/screenshots/dashboard-ui-drawer.png
+- @context/screenshots/dashboard-ui-main.png
