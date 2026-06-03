@@ -1,5 +1,9 @@
 # Dashboard UI Phase 3 Spec
 
+## Status
+
+In Progress
+
 ## Overview
 
 This is phase 3 of 3 for the dashboard UI layout. Use the screenshot referenced below for how it should look. Use the data from the mock data file referenced below. Just import it directly for now until we implement a database.

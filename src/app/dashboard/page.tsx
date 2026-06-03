@@ -36,12 +36,67 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+function StatCard({
+  label,
+  value,
+  note,
+  accentClassName,
+}: {
+  label: string;
+  value: number;
+  note: string;
+  accentClassName: string;
+}) {
+  return (
+    <Card className="border-white/10 bg-black/20">
+      <CardContent className="mt-0 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-[0.24em] text-zinc-500">{label}</p>
+          <p className="mt-3 text-4xl font-semibold tracking-tight text-zinc-50">{value}</p>
+          <p className="mt-2 text-sm text-zinc-400">{note}</p>
+        </div>
+        <div className={`h-11 w-11 rounded-2xl bg-gradient-to-br ${accentClassName}`} />
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
-  const collections = mockDashboardData.collections;
+  const collections = [...mockDashboardData.collections].reverse();
   const pinnedItems = mockDashboardData.items.filter((item) => item.isPinned);
   const recentItems = [...mockDashboardData.items]
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
-    .slice(0, 4);
+    .slice(0, 10);
+
+  const favoriteItems = mockDashboardData.items.filter((item) => item.isFavorite);
+  const favoriteCollections = mockDashboardData.collections.filter((collection) => collection.isFavorite);
+
+  const statCards = [
+    {
+      label: "Items",
+      value: mockDashboardData.items.length,
+      note: "Everything stored in the hub",
+      accentClassName: "from-sky-500/40 to-sky-500/10",
+    },
+    {
+      label: "Collections",
+      value: mockDashboardData.collections.length,
+      note: "All grouped workspaces",
+      accentClassName: "from-violet-500/40 to-violet-500/10",
+    },
+    {
+      label: "Favorite items",
+      value: favoriteItems.length,
+      note: "Pinned to your attention",
+      accentClassName: "from-orange-500/40 to-orange-500/10",
+    },
+    {
+      label: "Favorite collections",
+      value: favoriteCollections.length,
+      note: "Your most-used groups",
+      accentClassName: "from-emerald-500/40 to-emerald-500/10",
+    },
+  ];
 
   return (
     <section className="space-y-8">
@@ -50,9 +105,20 @@ export default function DashboardPage() {
         <p className="text-lg text-zinc-400">Your developer knowledge hub</p>
       </div>
 
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((card) => (
+          <StatCard key={card.label} {...card} />
+        ))}
+      </section>
+
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-50">Collections</h2>
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-50">
+              Recent collections
+            </h2>
+            <p className="mt-1 text-sm text-zinc-400">The latest places you’ve been organizing.</p>
+          </div>
           <Link
             href="/collections"
             className="text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-200"
@@ -132,7 +198,7 @@ export default function DashboardPage() {
       <section className="space-y-4">
         <div className="flex items-center gap-3 text-zinc-400">
           <span className="text-xl">Pin</span>
-          <h2 className="text-xl font-semibold text-zinc-300">Pinned</h2>
+          <h2 className="text-xl font-semibold text-zinc-300">Pinned items</h2>
         </div>
 
         <div className="space-y-4">
