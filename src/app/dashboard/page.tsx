@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { mockDashboardData } from "@/lib/mock-data";
 
@@ -28,6 +29,13 @@ function formatDate(dateValue: string) {
   }).format(new Date(dateValue));
 }
 
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function DashboardPage() {
   const collections = mockDashboardData.collections;
   const pinnedItems = mockDashboardData.items.filter((item) => item.isPinned);
@@ -45,69 +53,79 @@ export default function DashboardPage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-50">Collections</h2>
-          <a
+          <Link
             href="/collections"
             className="text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-200"
           >
             View all
-          </a>
+          </Link>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {collections.map((collection) => (
-            <Card
-              key={collection.id}
-              className={`relative overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${
-                collectionAccentClassNames[collection.color] ?? "before:bg-zinc-600"
-              }`}
-            >
-              <CardHeader className="pr-10">
+          {collections.map((collection) => {
+            const collectionHref = `/collections/${slugify(collection.name)}`;
+
+            return (
+              <Card
+                key={collection.id}
+                className={`relative overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${
+                  collectionAccentClassNames[collection.color] ?? "before:bg-zinc-600"
+                }`}
+              >
+                <CardHeader className="pr-10">
                   <div className="flex items-start justify-between gap-4">
-                    <div>
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                      <span>{collection.name}</span>
-                      {collection.isFavorite ? <span className="text-sm text-yellow-300">*</span> : null}
-                    </CardTitle>
-                    <CardDescription className="mt-2 text-sm">{collection.description}</CardDescription>
+                    <div className="min-w-0">
+                      <Link href={collectionHref} className="inline-flex">
+                        <CardTitle className="flex items-center gap-2 text-xl">
+                          <span>{collection.name}</span>
+                          {collection.isFavorite ? (
+                            <span className="text-sm text-yellow-300">*</span>
+                          ) : null}
+                        </CardTitle>
+                      </Link>
+                      <CardDescription className="mt-2 text-sm">
+                        {collection.description}
+                      </CardDescription>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Collection options for ${collection.name}`}
+                      className="text-zinc-500 transition-colors hover:text-zinc-300"
+                    >
+                      ...
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    aria-label={`Collection options for ${collection.name}`}
-                    className="text-zinc-500 transition-colors hover:text-zinc-300"
-                  >
-                    ...
-                  </button>
-                </div>
-                <p className="text-sm text-zinc-400">{collection.itemIds.length} items</p>
-              </CardHeader>
+                  <p className="text-sm text-zinc-400">{collection.itemIds.length} items</p>
+                </CardHeader>
 
-              <CardContent className="mt-5">
-                <div className="flex flex-wrap gap-2 text-sm">
-                  {collection.itemIds.slice(0, 4).map((itemId) => {
-                    const item = mockDashboardData.items.find((entry) => entry.id === itemId);
-                    if (!item) {
-                      return null;
-                    }
+                <CardContent className="mt-5">
+                  <div className="flex flex-wrap gap-2 text-sm">
+                    {collection.itemIds.slice(0, 4).map((itemId) => {
+                      const item = mockDashboardData.items.find((entry) => entry.id === itemId);
+                      if (!item) {
+                        return null;
+                      }
 
-                    const itemType = mockDashboardData.itemTypes.find(
-                      (type) => type.id === item.typeId,
-                    );
+                      const itemType = mockDashboardData.itemTypes.find(
+                        (type) => type.id === item.typeId,
+                      );
 
-                    return (
-                      <span
-                        key={item.id}
-                        className="inline-flex items-center rounded-full border border-white/6 bg-white/[0.04] px-2.5 py-1 text-zinc-300"
-                      >
-                        <span className={itemTypeColorClassNames[item.typeId] ?? "text-zinc-400"}>
-                          {itemType?.icon ?? "<>"}
+                      return (
+                        <span
+                          key={item.id}
+                          className="inline-flex items-center rounded-full border border-white/6 bg-white/[0.04] px-2.5 py-1 text-zinc-300"
+                        >
+                          <span className={itemTypeColorClassNames[item.typeId] ?? "text-zinc-400"}>
+                            {itemType?.icon ?? "<>"}
+                          </span>
                         </span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </section>
 
