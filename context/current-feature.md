@@ -1,6 +1,6 @@
 # Current Feature
 
-## SSR-First Dashboard Refactor
+## Neon PostgreSQL + Prisma Setup
 
 ## Status
 
@@ -8,14 +8,18 @@ In Progress
 
 ## Goals
 
-- Keep route files server-rendered by default
-- Isolate dashboard interactivity into client components
-- Preserve the current dashboard layout and behavior
+- Set up Prisma ORM with Neon PostgreSQL
+- Create the initial schema based on `context/project-overview.md`
+- Include NextAuth models: `Account`, `Session`, and `VerificationToken`
+- Add appropriate indexes and cascade deletes
+- Keep migrations as the source of truth
 
 ## Notes
 
-- Dashboard sidebar is now the main client boundary
-- Page and layout files should remain SSR
+- Use Prisma 7 and follow the breaking changes guide
+- Work from the development database branch first
+- Create migrations instead of pushing schema changes directly
+- Use the setup guidance from the Prisma quickstart if needed
 
 ## History
 
@@ -27,3 +31,4 @@ In Progress
 - 2026-06-04: Dashboard UI Phase 3 started.
 - 2026-06-04: Dashboard UI Phase 3 completed with stats cards, recent collections, pinned items, and 10 recent items. Build passed with `cmd /c npm run build`.
 - 2026-06-04: SSR-first dashboard refactor started.
+- 2026-06-04: Prisma + Neon PostgreSQL setup started.
