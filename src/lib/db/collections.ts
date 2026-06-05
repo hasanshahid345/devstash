@@ -2,28 +2,9 @@ import "server-only";
 
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { getTypeBorderClassName, getTypeIconClassName } from "@/lib/db/type-styles";
 
 const DEMO_USER_EMAIL = "demo@devstash.io";
-
-const COLLECTION_BORDER_CLASS_BY_TYPE: Record<string, string> = {
-  snippet: "before:bg-sky-500",
-  prompt: "before:bg-violet-500",
-  command: "before:bg-orange-500",
-  note: "before:bg-yellow-400",
-  file: "before:bg-slate-500",
-  image: "before:bg-pink-500",
-  link: "before:bg-emerald-500",
-};
-
-const TYPE_ICON_CLASS_BY_TYPE: Record<string, string> = {
-  snippet: "text-sky-400",
-  prompt: "text-violet-400",
-  command: "text-orange-400",
-  note: "text-yellow-300",
-  file: "text-slate-300",
-  image: "text-pink-400",
-  link: "text-emerald-400",
-};
 
 export interface DashboardCollectionTypeSummary {
   name: string;
@@ -52,18 +33,6 @@ export interface DashboardCollectionStats {
 export interface DashboardCollectionsData {
   collections: DashboardCollectionCard[];
   stats: DashboardCollectionStats;
-}
-
-function getBorderClassName(typeName: string | null) {
-  if (!typeName) {
-    return "before:bg-zinc-600";
-  }
-
-  return COLLECTION_BORDER_CLASS_BY_TYPE[typeName] ?? "before:bg-zinc-600";
-}
-
-function getIconClassName(typeName: string) {
-  return TYPE_ICON_CLASS_BY_TYPE[typeName] ?? "text-zinc-400";
 }
 
 function countTypes(
@@ -154,12 +123,12 @@ export const getDashboardCollectionsData = cache(async (): Promise<DashboardColl
       description: collection.description ?? "",
       isFavorite: collection.isFavorite,
       itemCount,
-      borderClassName: getBorderClassName(primaryTypeName),
+      borderClassName: getTypeBorderClassName(primaryTypeName),
       types: types.map((type) => ({
         name: type.name,
         icon: type.icon,
         count: type.count,
-        iconClassName: getIconClassName(type.name),
+        iconClassName: getTypeIconClassName(type.name),
       })),
     };
   });

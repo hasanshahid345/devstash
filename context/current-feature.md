@@ -1,6 +1,6 @@
 # Current Feature
 
-## Dashboard Collections Data
+## Dashboard Items Data
 
 ## Status
 
@@ -8,18 +8,18 @@ Completed
 
 ## Goals
 
-- Replace the dummy collection data in the dashboard main area with Prisma data
-- Create `src/lib/db/collections.ts` with collection data fetching helpers
-- Fetch collections directly in the server component
-- Derive the collection card border color from the most-used content type in each collection
-- Show small icons for all item types present in each collection
+- Replace the dummy item data in the dashboard main area with Prisma data
+- Create `src/lib/db/items.ts` with item data fetching helpers
+- Fetch pinned and recent items directly in the server component
+- Derive each item card icon and border from its item type
+- Display item type tags and the existing item metadata
 - Update the collection stats display
 - Keep the current dashboard design and layout intact
 
 ## Notes
 
 - Use the existing dashboard screenshot in `context/screenshots/dashboard-ui-main.png` as the visual reference
-- Do not add the items underneath the collections yet
+- If there are no pinned items, nothing should display in that section
 - Preserve the current dashboard styling and spacing as much as possible
 
 ## History
@@ -37,3 +37,5 @@ Completed
 - 2026-06-05: Seed data setup completed with `npm run db:seed` and verified with `npm run build`.
 - 2026-06-05: Dashboard collections data work started from `context/features/dashboard-collections-spec.md`.
 - 2026-06-05: Dashboard collections data work completed with Prisma-backed collections and verified with `npm run build`.
+- 2026-06-05: Dashboard items data work started from `context/features/dashboard-items-spec.md`.
+- 2026-06-05: Dashboard items data work completed with Prisma-backed items and verified with `npm run build`.

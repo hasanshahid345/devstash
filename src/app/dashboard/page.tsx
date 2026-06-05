@@ -3,17 +3,7 @@ import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardCollectionsData } from "@/lib/db/collections";
-import { mockDashboardData } from "@/lib/mock-data";
-
-const itemTypeColorClassNames: Record<string, string> = {
-  type_snippet: "text-sky-400",
-  type_prompt: "text-violet-400",
-  type_command: "text-orange-400",
-  type_note: "text-yellow-300",
-  type_file: "text-slate-300",
-  type_image: "text-pink-400",
-  type_url: "text-emerald-400",
-};
+import { getDashboardItemsData, type DashboardItemCard as DashboardItemCardData } from "@/lib/db/items";
 
 function formatDate(dateValue: string) {
   return new Intl.DateTimeFormat("en", {
@@ -60,13 +50,64 @@ function StatCard({
   );
 }
 
+function DashboardItemCard({
+  item,
+  titleClassName,
+  showDate,
+  cardClassName,
+}: {
+  item: DashboardItemCardData;
+  titleClassName: string;
+  showDate: boolean;
+  cardClassName: string;
+}) {
+  const Icon = getLucideIcon(item.typeIconName);
+
+  return (
+    <Card
+      className={`relative overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${cardClassName} ${item.borderClassName}`}
+    >
+      <CardContent className="mt-0">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/[0.05] text-lg">
+            <Icon className={`size-5 ${item.typeIconClassName}`} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className={titleClassName}>{item.title}</h3>
+              {item.isPinned ? <span className="text-zinc-500">Pin</span> : null}
+              {item.isFavorite ? <span className="text-yellow-300">*</span> : null}
+            </div>
+            <p className="mt-1 text-sm text-zinc-400">{item.description}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border border-white/6 bg-white/[0.04] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-zinc-300">
+                {item.typeName}
+              </span>
+              {item.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-white/[0.07] px-2.5 py-1 text-sm text-zinc-300"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          {showDate ? <div className="shrink-0 text-sm text-zinc-500">{formatDate(item.updatedAt)}</div> : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function DashboardPage() {
-  const dashboardCollectionsData = await getDashboardCollectionsData();
+  const [dashboardCollectionsData, dashboardItemsData] = await Promise.all([
+    getDashboardCollectionsData(),
+    getDashboardItemsData(),
+  ]);
   const collections = dashboardCollectionsData.collections;
-  const pinnedItems = mockDashboardData.items.filter((item) => item.isPinned);
-  const recentItems = [...mockDashboardData.items]
-    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
-    .slice(0, 10);
+  const pinnedItems = dashboardItemsData.pinnedItems;
+  const recentItems = dashboardItemsData.recentItems;
 
   const statCards = [
     {
@@ -182,79 +223,39 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center gap-3 text-zinc-400">
-          <span className="text-xl">Pin</span>
-          <h2 className="text-xl font-semibold text-zinc-300">Pinned items</h2>
-        </div>
+      {pinnedItems.length > 0 ? (
+        <section className="space-y-4">
+          <div className="flex items-center gap-3 text-zinc-400">
+            <span className="text-xl">Pin</span>
+            <h2 className="text-xl font-semibold text-zinc-300">Pinned items</h2>
+          </div>
 
-        <div className="space-y-4">
-          {pinnedItems.map((item) => {
-            const itemType = mockDashboardData.itemTypes.find((type) => type.id === item.typeId);
-
-            return (
-              <Card key={item.id} className="border-white/10 bg-black/20">
-                <CardContent className="mt-0">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-950/80 text-xl">
-                      <span className={itemTypeColorClassNames[item.typeId] ?? "text-sky-400"}>
-                        {itemType?.icon ?? "<>"}
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-lg font-semibold text-zinc-50">{item.title}</h3>
-                        <span className="text-zinc-500">Pin</span>
-                        {item.isFavorite ? <span className="text-yellow-300">*</span> : null}
-                      </div>
-                      <p className="mt-1 text-sm text-zinc-400">{item.description}</p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {item.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full bg-white/[0.07] px-2.5 py-1 text-sm text-zinc-300"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-sm text-zinc-500">{formatDate(item.updatedAt)}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
+          <div className="space-y-4">
+            {pinnedItems.map((item) => (
+              <DashboardItemCard
+                key={item.id}
+                item={item}
+                titleClassName="text-lg font-semibold text-zinc-50"
+                showDate
+                cardClassName="bg-black/20"
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-zinc-300">Recent items</h2>
         <div className="grid gap-4 xl:grid-cols-2">
-          {recentItems.map((item) => {
-            const itemType = mockDashboardData.itemTypes.find((type) => type.id === item.typeId);
-
-            return (
-              <Card key={item.id} className="border-white/10 bg-black/15">
-                <CardContent className="mt-0">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/[0.05] text-lg">
-                      <span className={itemTypeColorClassNames[item.typeId] ?? "text-zinc-400"}>
-                        {itemType?.icon ?? "<>"}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-medium text-zinc-100">{item.title}</h3>
-                        {item.isPinned ? <span className="text-zinc-500">Pin</span> : null}
-                      </div>
-                      <p className="mt-1 text-sm text-zinc-400">{item.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {recentItems.map((item) => (
+            <DashboardItemCard
+              key={item.id}
+              item={item}
+              titleClassName="text-base font-medium text-zinc-100"
+              showDate={false}
+              cardClassName="bg-black/15"
+            />
+          ))}
         </div>
       </section>
     </section>
