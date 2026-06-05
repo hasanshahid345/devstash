@@ -76,7 +76,7 @@ function countTypes(
 }
 
 export const getDashboardCollectionsData = cache(async (): Promise<DashboardCollectionsData> => {
-  const [collections, favoriteItemCount] = await Promise.all([
+  const [collections, itemCount, favoriteItemCount, collectionCount, favoriteCollectionCount] = await Promise.all([
     prisma.collection.findMany({
       where: {
         user: {
@@ -108,6 +108,28 @@ export const getDashboardCollectionsData = cache(async (): Promise<DashboardColl
         user: {
           email: DEMO_USER_EMAIL,
         },
+      },
+    }),
+    prisma.item.count({
+      where: {
+        user: {
+          email: DEMO_USER_EMAIL,
+        },
+        isFavorite: true,
+      },
+    }),
+    prisma.collection.count({
+      where: {
+        user: {
+          email: DEMO_USER_EMAIL,
+        },
+      },
+    }),
+    prisma.collection.count({
+      where: {
+        user: {
+          email: DEMO_USER_EMAIL,
+        },
         isFavorite: true,
       },
     }),
@@ -133,14 +155,11 @@ export const getDashboardCollectionsData = cache(async (): Promise<DashboardColl
     };
   });
 
-  const itemCount = collectionCards.reduce((total, collection) => total + collection.itemCount, 0);
-  const favoriteCollectionCount = collectionCards.filter((collection) => collection.isFavorite).length;
-
   return {
     collections: collectionCards.slice(0, 6),
     stats: {
       itemCount,
-      collectionCount: collectionCards.length,
+      collectionCount,
       favoriteItemCount,
       favoriteCollectionCount,
     },

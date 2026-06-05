@@ -1,7 +1,6 @@
 import Link from "next/link";
-import * as LucideIcons from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
 import { getDashboardCollectionsData } from "@/lib/db/collections";
 import { getDashboardItemsData, type DashboardItemCard as DashboardItemCardData } from "@/lib/db/items";
 
@@ -17,12 +16,6 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-function getLucideIcon(iconName: string) {
-  const Icon = LucideIcons[iconName as keyof typeof LucideIcons];
-
-  return (typeof Icon === "function" ? Icon : LucideIcons.Circle) as LucideIcon;
 }
 
 function StatCard({
@@ -61,8 +54,6 @@ function DashboardItemCard({
   showDate: boolean;
   cardClassName: string;
 }) {
-  const Icon = getLucideIcon(item.typeIconName);
-
   return (
     <Card
       className={`relative overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${cardClassName} ${item.borderClassName}`}
@@ -70,7 +61,10 @@ function DashboardItemCard({
       <CardContent className="mt-0">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/[0.05] text-lg">
-            <Icon className={`size-5 ${item.typeIconClassName}`} />
+            <DashboardLucideIcon
+              iconName={item.typeIconName}
+              className={`size-5 ${item.typeIconClassName}`}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -203,15 +197,16 @@ export default async function DashboardPage() {
                 <CardContent className="mt-5">
                   <div className="flex flex-wrap gap-2 text-sm">
                     {collection.types.map((type) => {
-                      const Icon = getLucideIcon(type.icon);
-
                       return (
                         <span
                           key={type.name}
                           className="inline-flex items-center gap-1.5 rounded-full border border-white/6 bg-white/[0.04] px-2.5 py-1 text-zinc-300"
                           title={`${type.name} (${type.count})`}
                         >
-                          <Icon className={`size-3.5 ${type.iconClassName}`} />
+                          <DashboardLucideIcon
+                            iconName={type.icon}
+                            className={`size-3.5 ${type.iconClassName}`}
+                          />
                         </span>
                       );
                     })}

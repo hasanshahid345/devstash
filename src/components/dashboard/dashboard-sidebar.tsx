@@ -3,19 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as LucideIcons from "lucide-react";
+import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { mockDashboardData } from "@/lib/mock-data";
+import type { DashboardSidebarData } from "@/lib/db/items";
 
-const itemTypeColorClassNames: Record<string, string> = {
-  blue: "text-sky-400",
-  violet: "text-violet-400",
-  orange: "text-orange-400",
-  yellow: "text-yellow-300",
-  slate: "text-slate-400",
-  pink: "text-pink-400",
-  emerald: "text-emerald-400",
-};
+const StarIcon = LucideIcons.Star;
+const ArrowRightIcon = LucideIcons.ArrowRight;
 
 function slugify(value: string) {
   return value
@@ -59,15 +54,14 @@ function DrawerToggleIcon({
   );
 }
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({
+  data,
+}: {
+  data: DashboardSidebarData;
+}) {
   const pathname = usePathname();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  const favoriteCollections = mockDashboardData.collections.filter(
-    (collection) => collection.isFavorite,
-  );
-  const recentCollections = [...mockDashboardData.collections].slice(-3).reverse();
 
   useEffect(() => {
     if (!isMobileSidebarOpen) {
@@ -173,7 +167,7 @@ export default function DashboardSidebar() {
                 </div>
 
                 <nav className="space-y-1">
-                  {mockDashboardData.itemTypes.map((itemType) => {
+                  {data.itemTypes.map((itemType) => {
                     const href = getTypeHref(itemType.name);
                     const active = isRouteActive(pathname, href);
 
@@ -192,9 +186,10 @@ export default function DashboardSidebar() {
                         title={itemType.name}
                       >
                         <span className="flex items-center gap-3">
-                          <span className={itemTypeColorClassNames[itemType.color] ?? "text-zinc-400"}>
-                            {itemType.icon}
-                          </span>
+                          <DashboardLucideIcon
+                            iconName={itemType.iconName}
+                            className={`size-4 ${itemType.iconClassName}`}
+                          />
                           <span className={cn(isSidebarCollapsed ? "lg:hidden" : "")}>
                             {itemType.name}
                           </span>
@@ -205,7 +200,7 @@ export default function DashboardSidebar() {
                             isSidebarCollapsed ? "lg:hidden" : "",
                           )}
                         >
-                          {itemType.itemIds.length}
+                          {itemType.itemCount}
                         </span>
                       </Link>
                     );
@@ -237,7 +232,7 @@ export default function DashboardSidebar() {
                       Recent
                     </p>
                     <div className="space-y-1">
-                      {recentCollections.map((collection) => {
+                      {data.recentCollections.map((collection) => {
                         const href = getCollectionHref(collection.name);
                         const active = isRouteActive(pathname, href);
 
@@ -256,15 +251,21 @@ export default function DashboardSidebar() {
                             title={collection.name}
                           >
                             <span className="flex items-center gap-3">
-                              <span className="text-zinc-500">[]</span>
+                              <span
+                                aria-hidden
+                                className={`size-2.5 rounded-full ${collection.primaryTypeDotClassName}`}
+                              />
                               <span className={cn(isSidebarCollapsed ? "lg:hidden" : "")}>
                                 {collection.name}
                               </span>
                             </span>
                             <span
-                              className={cn("text-zinc-500", isSidebarCollapsed ? "lg:hidden" : "")}
+                              className={cn(
+                                "text-sm text-zinc-500",
+                                isSidebarCollapsed ? "lg:hidden" : "",
+                              )}
                             >
-                              *
+                              {collection.itemCount}
                             </span>
                           </Link>
                         );
@@ -282,7 +283,7 @@ export default function DashboardSidebar() {
                       Favorites
                     </p>
                     <div className="space-y-1">
-                      {favoriteCollections.map((collection) => {
+                      {data.favoriteCollections.map((collection) => {
                         const href = getCollectionHref(collection.name);
                         const active = isRouteActive(pathname, href);
 
@@ -301,7 +302,7 @@ export default function DashboardSidebar() {
                             title={collection.name}
                           >
                             <span className="flex items-center gap-3">
-                              <span className="text-zinc-500">[]</span>
+                              <StarIcon className="size-4 fill-yellow-300/20 text-yellow-300" />
                               <span className={cn(isSidebarCollapsed ? "lg:hidden" : "")}>
                                 {collection.name}
                               </span>
@@ -309,7 +310,7 @@ export default function DashboardSidebar() {
                             <span
                               className={cn("text-zinc-500", isSidebarCollapsed ? "lg:hidden" : "")}
                             >
-                              *
+                              {collection.itemCount}
                             </span>
                           </Link>
                         );
@@ -327,7 +328,7 @@ export default function DashboardSidebar() {
                       All collections
                     </p>
                     <div className="space-y-1">
-                      {mockDashboardData.collections.map((collection) => {
+                      {data.collections.map((collection) => {
                         const href = getCollectionHref(collection.name);
                         const active = isRouteActive(pathname, href);
 
@@ -346,7 +347,10 @@ export default function DashboardSidebar() {
                             title={collection.name}
                           >
                             <span className="flex items-center gap-3">
-                              <span className="text-zinc-500">[]</span>
+                              <span
+                                aria-hidden
+                                className={`size-2.5 rounded-full ${collection.primaryTypeDotClassName}`}
+                              />
                               <span className={cn(isSidebarCollapsed ? "lg:hidden" : "")}>
                                 {collection.name}
                               </span>
@@ -357,12 +361,25 @@ export default function DashboardSidebar() {
                                 isSidebarCollapsed ? "lg:hidden" : "",
                               )}
                             >
-                              {collection.itemIds.length}
+                              {collection.itemCount}
                             </span>
                           </Link>
                         );
                       })}
                     </div>
+                    <Link
+                      href="/collections"
+                      onNavigate={closeMobileSidebarIfNeeded}
+                      className={cn(
+                        "mt-2 flex items-center justify-between rounded-xl px-2.5 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200",
+                        isSidebarCollapsed ? "lg:justify-center lg:px-0" : "",
+                      )}
+                    >
+                      <span className={cn(isSidebarCollapsed ? "lg:hidden" : "")}>
+                        View all collections
+                      </span>
+                      <ArrowRightIcon className="size-4" />
+                    </Link>
                   </div>
                 </div>
               </section>
@@ -378,11 +395,11 @@ export default function DashboardSidebar() {
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-900">
-                  JD
+                  {data.user.initials}
                 </div>
                 <div className={cn("min-w-0", isSidebarCollapsed ? "lg:hidden" : "")}>
-                  <p className="truncate text-sm font-medium">{mockDashboardData.user.name}</p>
-                  <p className="truncate text-xs text-zinc-500">{mockDashboardData.user.email}</p>
+                  <p className="truncate text-sm font-medium">{data.user.name}</p>
+                  <p className="truncate text-xs text-zinc-500">{data.user.email}</p>
                 </div>
               </div>
               <span
@@ -391,7 +408,7 @@ export default function DashboardSidebar() {
                   isSidebarCollapsed ? "lg:hidden" : "",
                 )}
               >
-                Pro
+                {data.user.isPro ? "Pro" : "Free"}
               </span>
             </div>
           </div>

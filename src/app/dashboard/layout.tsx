@@ -2,16 +2,19 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
+import { getDashboardSidebarData } from "@/lib/db/items";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const sidebarData = await getDashboardSidebarData();
+
   return (
     <div className="min-h-screen bg-transparent text-zinc-100">
       <div className="relative min-h-screen lg:flex">
-        <DashboardSidebar />
+        <DashboardSidebar data={sidebarData} />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-white/8 bg-zinc-950/80 backdrop-blur-xl">

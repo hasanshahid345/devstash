@@ -18,6 +18,16 @@ const TYPE_ICON_CLASS_BY_NAME: Record<string, string> = {
   link: "text-emerald-400",
 };
 
+const TYPE_DOT_CLASS_BY_NAME: Record<string, string> = {
+  snippet: "bg-sky-500",
+  prompt: "bg-violet-500",
+  command: "bg-orange-500",
+  note: "bg-yellow-400",
+  file: "bg-slate-500",
+  image: "bg-pink-500",
+  link: "bg-emerald-500",
+};
+
 export function getTypeBorderClassName(typeName: string | null): string {
   if (!typeName) {
     return "before:bg-zinc-600";
@@ -28,4 +38,12 @@ export function getTypeBorderClassName(typeName: string | null): string {
 
 export function getTypeIconClassName(typeName: string): string {
   return TYPE_ICON_CLASS_BY_NAME[typeName] ?? "text-zinc-400";
+}
+
+export function getTypeDotClassName(typeName: string | null): string {
+  if (!typeName) {
+    return "bg-zinc-600";
+  }
+
+  return TYPE_DOT_CLASS_BY_NAME[typeName] ?? "bg-zinc-600";
 }
