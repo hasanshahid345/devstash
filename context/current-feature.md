@@ -1,25 +1,24 @@
 # Current Feature
 
-## Neon PostgreSQL + Prisma Setup
+## Seed Data Setup
 
 ## Status
 
-In Progress
+Completed
 
 ## Goals
 
-- Set up Prisma ORM with Neon PostgreSQL
-- Create the initial schema based on `context/project-overview.md`
-- Include NextAuth models: `Account`, `Session`, and `VerificationToken`
-- Add appropriate indexes and cascade deletes
-- Keep migrations as the source of truth
+- Create `prisma/seed.ts` to populate development/demo data
+- Add the demo user from `context/seed-spec.md`
+- Seed all system item types with the specified Lucide icons and colors
+- Seed the requested collections, items, and links from the spec
+- Use bcryptjs with 12 rounds for the demo password hash
 
 ## Notes
 
-- Use Prisma 7 and follow the breaking changes guide
-- Work from the development database branch first
-- Create migrations instead of pushing schema changes directly
-- Use the setup guidance from the Prisma quickstart if needed
+- Follow the seed data specification in `context/seed-spec.md`
+- Use real URLs for the design and DevOps links
+- Keep the seed script deterministic and easy to rerun
 
 ## History
 
@@ -32,3 +31,5 @@ In Progress
 - 2026-06-04: Dashboard UI Phase 3 completed with stats cards, recent collections, pinned items, and 10 recent items. Build passed with `cmd /c npm run build`.
 - 2026-06-04: SSR-first dashboard refactor started.
 - 2026-06-04: Prisma + Neon PostgreSQL setup started.
+- 2026-06-05: Seed data setup started from `context/seed-spec.md`.
+- 2026-06-05: Seed data setup completed with `npm run db:seed` and verified with `npm run build`.
