@@ -1,6 +1,6 @@
 # Current Feature
 
-## Seed Data Setup
+## Dashboard Collections Data
 
 ## Status
 
@@ -8,17 +8,19 @@ Completed
 
 ## Goals
 
-- Create `prisma/seed.ts` to populate development/demo data
-- Add the demo user from `context/seed-spec.md`
-- Seed all system item types with the specified Lucide icons and colors
-- Seed the requested collections, items, and links from the spec
-- Use bcryptjs with 12 rounds for the demo password hash
+- Replace the dummy collection data in the dashboard main area with Prisma data
+- Create `src/lib/db/collections.ts` with collection data fetching helpers
+- Fetch collections directly in the server component
+- Derive the collection card border color from the most-used content type in each collection
+- Show small icons for all item types present in each collection
+- Update the collection stats display
+- Keep the current dashboard design and layout intact
 
 ## Notes
 
-- Follow the seed data specification in `context/seed-spec.md`
-- Use real URLs for the design and DevOps links
-- Keep the seed script deterministic and easy to rerun
+- Use the existing dashboard screenshot in `context/screenshots/dashboard-ui-main.png` as the visual reference
+- Do not add the items underneath the collections yet
+- Preserve the current dashboard styling and spacing as much as possible
 
 ## History
 
@@ -33,3 +35,5 @@ Completed
 - 2026-06-04: Prisma + Neon PostgreSQL setup started.
 - 2026-06-05: Seed data setup started from `context/seed-spec.md`.
 - 2026-06-05: Seed data setup completed with `npm run db:seed` and verified with `npm run build`.
+- 2026-06-05: Dashboard collections data work started from `context/features/dashboard-collections-spec.md`.
+- 2026-06-05: Dashboard collections data work completed with Prisma-backed collections and verified with `npm run build`.

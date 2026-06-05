@@ -1,5 +1,8 @@
 import Link from "next/link";
+import * as LucideIcons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardCollectionsData } from "@/lib/db/collections";
 import { mockDashboardData } from "@/lib/mock-data";
 
 const itemTypeColorClassNames: Record<string, string> = {
@@ -10,16 +13,6 @@ const itemTypeColorClassNames: Record<string, string> = {
   type_file: "text-slate-300",
   type_image: "text-pink-400",
   type_url: "text-emerald-400",
-};
-
-const collectionAccentClassNames: Record<string, string> = {
-  blue: "before:bg-sky-500",
-  violet: "before:bg-violet-500",
-  orange: "before:bg-orange-500",
-  yellow: "before:bg-yellow-400",
-  slate: "before:bg-slate-500",
-  pink: "before:bg-pink-500",
-  emerald: "before:bg-emerald-500",
 };
 
 function formatDate(dateValue: string) {
@@ -34,6 +27,12 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function getLucideIcon(iconName: string) {
+  const Icon = LucideIcons[iconName as keyof typeof LucideIcons];
+
+  return (typeof Icon === "function" ? Icon : LucideIcons.Circle) as LucideIcon;
 }
 
 function StatCard({
@@ -61,38 +60,36 @@ function StatCard({
   );
 }
 
-export default function DashboardPage() {
-  const collections = [...mockDashboardData.collections].reverse();
+export default async function DashboardPage() {
+  const dashboardCollectionsData = await getDashboardCollectionsData();
+  const collections = dashboardCollectionsData.collections;
   const pinnedItems = mockDashboardData.items.filter((item) => item.isPinned);
   const recentItems = [...mockDashboardData.items]
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
     .slice(0, 10);
 
-  const favoriteItems = mockDashboardData.items.filter((item) => item.isFavorite);
-  const favoriteCollections = mockDashboardData.collections.filter((collection) => collection.isFavorite);
-
   const statCards = [
     {
       label: "Items",
-      value: mockDashboardData.items.length,
+      value: dashboardCollectionsData.stats.itemCount,
       note: "Everything stored in the hub",
       accentClassName: "from-sky-500/40 to-sky-500/10",
     },
     {
       label: "Collections",
-      value: mockDashboardData.collections.length,
+      value: dashboardCollectionsData.stats.collectionCount,
       note: "All grouped workspaces",
       accentClassName: "from-violet-500/40 to-violet-500/10",
     },
     {
       label: "Favorite items",
-      value: favoriteItems.length,
+      value: dashboardCollectionsData.stats.favoriteItemCount,
       note: "Pinned to your attention",
       accentClassName: "from-orange-500/40 to-orange-500/10",
     },
     {
       label: "Favorite collections",
-      value: favoriteCollections.length,
+      value: dashboardCollectionsData.stats.favoriteCollectionCount,
       note: "Your most-used groups",
       accentClassName: "from-emerald-500/40 to-emerald-500/10",
     },
@@ -134,9 +131,7 @@ export default function DashboardPage() {
             return (
               <Card
                 key={collection.id}
-                className={`relative overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${
-                  collectionAccentClassNames[collection.color] ?? "before:bg-zinc-600"
-                }`}
+                className={`relative overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${collection.borderClassName}`}
               >
                 <CardHeader className="pr-10">
                   <div className="flex items-start justify-between gap-4">
@@ -161,29 +156,21 @@ export default function DashboardPage() {
                       ...
                     </button>
                   </div>
-                  <p className="text-sm text-zinc-400">{collection.itemIds.length} items</p>
+                  <p className="text-sm text-zinc-400">{collection.itemCount} items</p>
                 </CardHeader>
 
                 <CardContent className="mt-5">
                   <div className="flex flex-wrap gap-2 text-sm">
-                    {collection.itemIds.slice(0, 4).map((itemId) => {
-                      const item = mockDashboardData.items.find((entry) => entry.id === itemId);
-                      if (!item) {
-                        return null;
-                      }
-
-                      const itemType = mockDashboardData.itemTypes.find(
-                        (type) => type.id === item.typeId,
-                      );
+                    {collection.types.map((type) => {
+                      const Icon = getLucideIcon(type.icon);
 
                       return (
                         <span
-                          key={item.id}
-                          className="inline-flex items-center rounded-full border border-white/6 bg-white/[0.04] px-2.5 py-1 text-zinc-300"
+                          key={type.name}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-white/6 bg-white/[0.04] px-2.5 py-1 text-zinc-300"
+                          title={`${type.name} (${type.count})`}
                         >
-                          <span className={itemTypeColorClassNames[item.typeId] ?? "text-zinc-400"}>
-                            {itemType?.icon ?? "<>"}
-                          </span>
+                          <Icon className={`size-3.5 ${type.iconClassName}`} />
                         </span>
                       );
                     })}
