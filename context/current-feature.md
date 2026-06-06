@@ -1,28 +1,12 @@
 # Current Feature
 
-## Stats & Sidebar Data
-
 ## Status
 
-Completed
+Not Started
 
 ## Goals
 
-- Replace the stats in the dashboard main area with database-backed data
-- Show system item types in the sidebar from the database
-- Link sidebar item types to `/items/[typename]`
-- Show actual collection data in the sidebar from the database
-- Add a "View all collections" link under the sidebar collections list that goes to `/collections`
-- Keep favorite collection star icons
-- For recent collections, show a colored circle based on the most-used item type in that collection
-- Create or update `src/lib/db/items.ts` with needed database helpers, using `src/lib/db/collections.ts` as a reference
-- Keep the current dashboard design and layout intact
-
 ## Notes
-
-- Stats should come from Prisma/database data instead of `src/lib/mock-data.ts`
-- Use `src/lib/db/collections.ts` as the implementation reference where helpful
-- Preserve the current dashboard styling and spacing as much as possible
 
 ## History
 
@@ -43,3 +27,4 @@ Completed
 - 2026-06-05: Dashboard items data work completed with Prisma-backed items and verified with `npm run build`.
 - 2026-06-05: Stats & sidebar data work started from `context/features/stats-sidebar-spec.md`.
 - 2026-06-05: Stats & sidebar data work completed with Prisma-backed stats and sidebar data. Verified `/dashboard`, `npm run lint`, and `npm run build`.
+- 2026-06-07: Add Pro Badge To Sidebar completed with subtle `PRO` badges for file and image sidebar item types. Verified `/dashboard`, `npm run lint`, and `npm run build`.

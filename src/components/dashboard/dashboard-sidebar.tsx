@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as LucideIcons from "lucide-react";
 import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DashboardSidebarData } from "@/lib/db/items";
@@ -29,6 +30,11 @@ function getCollectionHref(name: string) {
 
 function isRouteActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isProItemType(name: string) {
+  const normalizedName = slugify(name);
+  return ["file", "files", "image", "images"].includes(normalizedName);
 }
 
 function DrawerToggleIcon({
@@ -170,6 +176,7 @@ export default function DashboardSidebar({
                   {data.itemTypes.map((itemType) => {
                     const href = getTypeHref(itemType.name);
                     const active = isRouteActive(pathname, href);
+                    const showProBadge = isProItemType(itemType.name);
 
                     return (
                       <Link
@@ -185,13 +192,19 @@ export default function DashboardSidebar({
                         )}
                         title={itemType.name}
                       >
-                        <span className="flex items-center gap-3">
+                        <span className="flex min-w-0 items-center gap-3">
                           <DashboardLucideIcon
                             iconName={itemType.iconName}
-                            className={`size-4 ${itemType.iconClassName}`}
+                            className={`size-4 shrink-0 ${itemType.iconClassName}`}
                           />
-                          <span className={cn(isSidebarCollapsed ? "lg:hidden" : "")}>
-                            {itemType.name}
+                          <span
+                            className={cn(
+                              "flex min-w-0 items-center gap-2",
+                              isSidebarCollapsed ? "lg:hidden" : "",
+                            )}
+                          >
+                            <span className="truncate">{itemType.name}</span>
+                            {showProBadge ? <Badge variant="subtle">PRO</Badge> : null}
                           </span>
                         </span>
                         <span
