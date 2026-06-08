@@ -4,8 +4,6 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { getTypeBorderClassName, getTypeIconClassName } from "@/lib/db/type-styles";
 
-const DEMO_USER_EMAIL = "demo@devstash.io";
-
 export interface DashboardCollectionTypeSummary {
   name: string;
   icon: string;
@@ -75,17 +73,18 @@ function countTypes(
   };
 }
 
-export const getDashboardCollectionsData = cache(async (): Promise<DashboardCollectionsData> => {
+export const getDashboardCollectionsData = cache(async (userEmail: string): Promise<DashboardCollectionsData> => {
   const [collections, itemCount, favoriteItemCount, collectionCount, favoriteCollectionCount] = await Promise.all([
     prisma.collection.findMany({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
       },
       orderBy: {
         createdAt: "desc",
       },
+      take: 6,
       select: {
         id: true,
         name: true,
@@ -106,14 +105,14 @@ export const getDashboardCollectionsData = cache(async (): Promise<DashboardColl
     prisma.item.count({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
       },
     }),
     prisma.item.count({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
         isFavorite: true,
       },
@@ -121,14 +120,14 @@ export const getDashboardCollectionsData = cache(async (): Promise<DashboardColl
     prisma.collection.count({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
       },
     }),
     prisma.collection.count({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
         isFavorite: true,
       },
@@ -156,7 +155,7 @@ export const getDashboardCollectionsData = cache(async (): Promise<DashboardColl
   });
 
   return {
-    collections: collectionCards.slice(0, 6),
+    collections: collectionCards,
     stats: {
       itemCount,
       collectionCount,

@@ -1,25 +1,38 @@
 import Link from "next/link";
+import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDashboardData } from "@/lib/mock-data";
+import { getCurrentUser } from "@/lib/current-user";
+import { getTypeIconClassName } from "@/lib/db/type-styles";
+import { prisma } from "@/lib/prisma";
+import { slugify } from "@/lib/utils";
 
-const itemTypeColorClassNames: Record<string, string> = {
-  blue: "text-sky-400",
-  violet: "text-violet-400",
-  orange: "text-orange-400",
-  yellow: "text-yellow-300",
-  slate: "text-slate-400",
-  pink: "text-pink-400",
-  emerald: "text-emerald-400",
-};
+export default async function ItemsPage() {
+  const currentUser = await getCurrentUser();
+  const itemTypes = await prisma.itemType.findMany({
+    where: {
+      isSystem: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+    select: {
+      id: true,
+      name: true,
+      icon: true,
+      _count: {
+        select: {
+          items: {
+            where: {
+              user: {
+                email: currentUser.email,
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-export default function ItemsPage() {
   return (
     <section className="space-y-6">
       <div className="space-y-1">
@@ -28,7 +41,7 @@ export default function ItemsPage() {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {mockDashboardData.itemTypes.map((itemType) => {
+        {itemTypes.map((itemType) => {
           const href = `/items/${slugify(itemType.name)}`;
 
           return (
@@ -37,18 +50,23 @@ export default function ItemsPage() {
                 <CardHeader className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/[0.04] text-lg">
-                      <span className={itemTypeColorClassNames[itemType.color] ?? "text-zinc-400"}>
-                        {itemType.icon}
-                      </span>
+                      <DashboardLucideIcon
+                        iconName={itemType.icon ?? "Circle"}
+                        className={`size-5 ${getTypeIconClassName(itemType.name)}`}
+                      />
                     </div>
                     <div>
                       <CardTitle className="text-xl">{itemType.name}</CardTitle>
-                      <CardDescription className="mt-1">{itemType.itemIds.length} items</CardDescription>
+                      <CardDescription className="mt-1">
+                        {itemType._count.items} items
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="mt-0">
-                  <p className="text-sm text-zinc-400">Open this type to inspect the matching items.</p>
+                  <p className="text-sm text-zinc-400">
+                    Open this type to inspect the matching items.
+                  </p>
                 </CardContent>
               </Card>
             </Link>

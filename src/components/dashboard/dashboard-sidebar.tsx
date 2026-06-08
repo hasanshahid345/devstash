@@ -1,24 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as LucideIcons from "lucide-react";
 import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, slugify } from "@/lib/utils";
 import type { DashboardSidebarData } from "@/lib/db/items";
 
 const StarIcon = LucideIcons.Star;
 const ArrowRightIcon = LucideIcons.ArrowRight;
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 function getTypeHref(name: string) {
   return `/items/${slugify(name)}`;
@@ -407,8 +401,18 @@ export default function DashboardSidebar({
               )}
             >
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-900">
-                  {data.user.initials}
+                <div className="flex h-11 w-11 overflow-hidden rounded-full bg-zinc-200 text-sm font-semibold text-zinc-900">
+                  {data.user.image ? (
+                    <Image
+                      src={data.user.image}
+                      alt=""
+                      width={44}
+                      height={44}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="m-auto">{data.user.initials}</span>
+                  )}
                 </div>
                 <div className={cn("min-w-0", isSidebarCollapsed ? "lg:hidden" : "")}>
                   <p className="truncate text-sm font-medium">{data.user.name}</p>

@@ -1,26 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDashboardData } from "@/lib/mock-data";
+import { getCurrentUser } from "@/lib/current-user";
+import { getTypeIconClassName } from "@/lib/db/type-styles";
+import { prisma } from "@/lib/prisma";
+import { slugify } from "@/lib/utils";
 
-const itemTypeColorClassNames: Record<string, string> = {
-  blue: "text-sky-400",
-  violet: "text-violet-400",
-  orange: "text-orange-400",
-  yellow: "text-yellow-300",
-  slate: "text-slate-400",
-  pink: "text-pink-400",
-  emerald: "text-emerald-400",
-};
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function formatDate(dateValue: string) {
+function formatDate(dateValue: Date | string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
     day: "numeric",
@@ -32,16 +19,50 @@ export default async function ItemTypePage({
 }: {
   params: Promise<{ type: string }>;
 }) {
+  const currentUser = await getCurrentUser();
   const { type } = await params;
-  const itemType = mockDashboardData.itemTypes.find(
-    (entry) => slugify(entry.name) === type || entry.id === type,
-  );
+  const itemTypes = await prisma.itemType.findMany({
+    where: {
+      isSystem: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      icon: true,
+    },
+  });
+  const itemType = itemTypes.find((entry) => slugify(entry.name) === type || entry.id === type);
 
   if (!itemType) {
     notFound();
   }
 
-  const items = mockDashboardData.items.filter((item) => item.typeId === itemType.id);
+  const items = await prisma.item.findMany({
+    where: {
+      typeId: itemType.id,
+      user: {
+        email: currentUser.email,
+      },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      updatedAt: true,
+      tags: {
+        select: {
+          tag: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
   return (
     <section className="space-y-6">
@@ -51,9 +72,10 @@ export default async function ItemTypePage({
         </Link>
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] text-xl">
-            <span className={itemTypeColorClassNames[itemType.color] ?? "text-zinc-400"}>
-              {itemType.icon}
-            </span>
+            <DashboardLucideIcon
+              iconName={itemType.icon ?? "Circle"}
+              className={`size-5 ${getTypeIconClassName(itemType.name)}`}
+            />
           </div>
           <div>
             <h1 className="text-4xl font-semibold tracking-tight text-zinc-50">{itemType.name}</h1>
@@ -70,7 +92,7 @@ export default async function ItemTypePage({
               <CardDescription>{item.description}</CardDescription>
             </CardHeader>
             <CardContent className="mt-0 flex items-center justify-between text-sm text-zinc-500">
-              <span>{item.tags.join(" | ")}</span>
+              <span>{item.tags.map((entry) => entry.tag.name).join(" | ")}</span>
               <span>{formatDate(item.updatedAt)}</span>
             </CardContent>
           </Card>

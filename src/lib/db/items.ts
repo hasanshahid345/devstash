@@ -8,8 +8,6 @@ import {
   getTypeIconClassName,
 } from "@/lib/db/type-styles";
 
-const DEMO_USER_EMAIL = "demo@devstash.io";
-
 export interface DashboardItemCard {
   id: string;
   title: string;
@@ -48,6 +46,7 @@ export interface DashboardSidebarCollection {
 export interface DashboardSidebarUser {
   name: string;
   email: string;
+  image: string | null;
   initials: string;
   isPro: boolean;
 }
@@ -131,6 +130,9 @@ function mapSidebarCollection(
     id: string;
     name: string;
     isFavorite: boolean;
+    _count: {
+      items: number;
+    };
     items: Array<{
       type: {
         name: string;
@@ -144,17 +146,17 @@ function mapSidebarCollection(
     id: collection.id,
     name: collection.name,
     isFavorite: collection.isFavorite,
-    itemCount: collection.items.length,
+    itemCount: collection._count.items,
     primaryTypeDotClassName: getTypeDotClassName(primaryTypeName),
   };
 }
 
-export const getDashboardItemsData = cache(async (): Promise<DashboardItemsData> => {
+export const getDashboardItemsData = cache(async (userEmail: string): Promise<DashboardItemsData> => {
   const [pinnedItems, recentItems] = await Promise.all([
     prisma.item.findMany({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
         isPinned: true,
       },
@@ -188,7 +190,7 @@ export const getDashboardItemsData = cache(async (): Promise<DashboardItemsData>
     prisma.item.findMany({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
       },
       orderBy: {
@@ -227,15 +229,16 @@ export const getDashboardItemsData = cache(async (): Promise<DashboardItemsData>
   };
 });
 
-export const getDashboardSidebarData = cache(async (): Promise<DashboardSidebarData> => {
+export const getDashboardSidebarData = cache(async (userEmail: string): Promise<DashboardSidebarData> => {
   const [user, itemTypes, collections] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: {
-        email: DEMO_USER_EMAIL,
+        email: userEmail,
       },
       select: {
         name: true,
         email: true,
+        image: true,
         isPro: true,
       },
     }),
@@ -250,14 +253,15 @@ export const getDashboardSidebarData = cache(async (): Promise<DashboardSidebarD
         id: true,
         name: true,
         icon: true,
-        items: {
-          where: {
-            user: {
-              email: DEMO_USER_EMAIL,
-            },
-          },
+        _count: {
           select: {
-            id: true,
+            items: {
+              where: {
+                user: {
+                  email: userEmail,
+                },
+              },
+            },
           },
         },
       },
@@ -265,7 +269,7 @@ export const getDashboardSidebarData = cache(async (): Promise<DashboardSidebarD
     prisma.collection.findMany({
       where: {
         user: {
-          email: DEMO_USER_EMAIL,
+          email: userEmail,
         },
       },
       orderBy: {
@@ -275,7 +279,17 @@ export const getDashboardSidebarData = cache(async (): Promise<DashboardSidebarD
         id: true,
         name: true,
         isFavorite: true,
+        _count: {
+          select: {
+            items: true,
+          },
+        },
         items: {
+          where: {
+            user: {
+              email: userEmail,
+            },
+          },
           select: {
             type: {
               select: {
@@ -296,7 +310,7 @@ export const getDashboardSidebarData = cache(async (): Promise<DashboardSidebarD
       name: itemType.name,
       iconName: itemType.icon ?? "Circle",
       iconClassName: getTypeIconClassName(itemType.name),
-      itemCount: itemType.items.length,
+      itemCount: itemType._count.items,
     })),
     recentCollections: sidebarCollections.slice(0, 3),
     favoriteCollections: sidebarCollections.filter((collection) => collection.isFavorite),
@@ -304,6 +318,7 @@ export const getDashboardSidebarData = cache(async (): Promise<DashboardSidebarD
     user: {
       name: user.name ?? "DevStash User",
       email: user.email,
+      image: user.image,
       initials: getInitials(user.name, user.email),
       isPro: user.isPro,
     },

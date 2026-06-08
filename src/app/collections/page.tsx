@@ -1,25 +1,65 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDashboardData } from "@/lib/mock-data";
+import { getCurrentUser } from "@/lib/current-user";
+import { getTypeBorderClassName } from "@/lib/db/type-styles";
+import { prisma } from "@/lib/prisma";
+import { slugify } from "@/lib/utils";
 
-const collectionAccentClassNames: Record<string, string> = {
-  blue: "before:bg-sky-500",
-  violet: "before:bg-violet-500",
-  orange: "before:bg-orange-500",
-  yellow: "before:bg-yellow-400",
-  slate: "before:bg-slate-500",
-  pink: "before:bg-pink-500",
-  emerald: "before:bg-emerald-500",
-};
+function getPrimaryTypeName(
+  items: Array<{
+    type: {
+      name: string;
+    };
+  }>,
+) {
+  const typeCounts = new Map<string, number>();
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  for (const item of items) {
+    typeCounts.set(item.type.name, (typeCounts.get(item.type.name) ?? 0) + 1);
+  }
+
+  return [...typeCounts.entries()].sort((left, right) => {
+    if (right[1] !== left[1]) {
+      return right[1] - left[1];
+    }
+
+    return left[0].localeCompare(right[0]);
+  })[0]?.[0] ?? null;
 }
 
-export default function CollectionsPage() {
+export default async function CollectionsPage() {
+  const currentUser = await getCurrentUser();
+  const collections = await prisma.collection.findMany({
+    where: {
+      user: {
+        email: currentUser.email,
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      isFavorite: true,
+      _count: {
+        select: {
+          items: true,
+        },
+      },
+      items: {
+        select: {
+          type: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
   return (
     <section className="space-y-6">
       <div className="space-y-1">
@@ -28,25 +68,26 @@ export default function CollectionsPage() {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {mockDashboardData.collections.map((collection) => {
+        {collections.map((collection) => {
           const href = `/collections/${slugify(collection.name)}`;
+          const borderClassName = getTypeBorderClassName(getPrimaryTypeName(collection.items));
 
           return (
             <Link key={collection.id} href={href} className="block">
               <Card
-                className={`relative h-full overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${
-                  collectionAccentClassNames[collection.color] ?? "before:bg-zinc-600"
-                }`}
+                className={`relative h-full overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${borderClassName}`}
               >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <span>{collection.name}</span>
-                    {collection.isFavorite ? <span className="text-sm text-yellow-300">*</span> : null}
+                    {collection.isFavorite ? (
+                      <span className="text-sm text-yellow-300">*</span>
+                    ) : null}
                   </CardTitle>
                   <CardDescription>{collection.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="mt-0 text-sm text-zinc-400">
-                  {collection.itemIds.length} items
+                  {collection._count.items} items
                 </CardContent>
               </Card>
             </Link>

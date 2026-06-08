@@ -1,21 +1,16 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
+import { getCurrentUser } from "@/lib/current-user";
 import { getDashboardCollectionsData } from "@/lib/db/collections";
 import { getDashboardItemsData, type DashboardItemCard as DashboardItemCardData } from "@/lib/db/items";
+import { slugify } from "@/lib/utils";
 
 function formatDate(dateValue: string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
     day: "numeric",
   }).format(new Date(dateValue));
-}
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 function StatCard({
@@ -95,9 +90,10 @@ function DashboardItemCard({
 }
 
 export default async function DashboardPage() {
+  const currentUser = await getCurrentUser();
   const [dashboardCollectionsData, dashboardItemsData] = await Promise.all([
-    getDashboardCollectionsData(),
-    getDashboardItemsData(),
+    getDashboardCollectionsData(currentUser.email),
+    getDashboardItemsData(currentUser.email),
   ]);
   const collections = dashboardCollectionsData.collections;
   const pinnedItems = dashboardItemsData.pinnedItems;

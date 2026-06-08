@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UserMenu } from "@/components/auth/user-menu";
 import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
+import { getCurrentUser } from "@/lib/current-user";
 import { getDashboardSidebarData } from "@/lib/db/items";
 
 export default async function DashboardLayout({
@@ -9,7 +11,8 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const sidebarData = await getDashboardSidebarData();
+  const currentUser = await getCurrentUser();
+  const sidebarData = await getDashboardSidebarData(currentUser.email);
 
   return (
     <div className="min-h-screen bg-transparent text-zinc-100">
@@ -39,6 +42,7 @@ export default async function DashboardLayout({
                 <Button variant="outline">New Collection</Button>
                 <Button>New Item</Button>
               </div>
+              <UserMenu user={currentUser} />
             </div>
           </header>
 

@@ -1,12 +1,38 @@
-# Current Feature
+# Current Feature: User Authentication
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Install the latest NextAuth/Auth.js packages needed for the app.
+- Add the NextAuth Prisma models: Account, Session, and VerificationToken.
+- Configure NextAuth v5 with the Prisma adapter using the split auth config pattern.
+- Add GitHub OAuth sign-in.
+- Add email/password credentials sign-in.
+- Create a register page with name, email, password, and confirm password fields.
+- Create a sign-in page with an email/password form and GitHub sign-in button.
+- Hash user passwords with bcryptjs during registration.
+- Protect dashboard routes with edge-compatible middleware/proxy behavior.
+- Redirect unauthenticated users to the sign-in page.
+- Show the signed-in user's avatar and name in the top bar.
+- Add a sign-out link in an avatar dropdown.
+- Use the GitHub avatar when available, otherwise show initials.
+
 ## Notes
+
+- Spec loaded from `context/features/next-auth-master-spec.md`.
+- Check current NextAuth/Auth.js, Prisma 7, and Next.js 16 documentation before implementation.
+- Always use Prisma migrations, never `db push`.
+- Migration command from spec: `npx prisma migrate dev --name add-auth-models`.
+- Use the split auth config pattern for Edge compatibility:
+  - `src/lib/auth.config.ts`: base config with providers, JWT session, callbacks, and no Prisma imports. Credentials provider should use an `authorize: () => null` placeholder.
+  - `src/lib/auth.ts`: extends `auth.config`, adds `PrismaAdapter`, and overrides Credentials with real bcrypt validation.
+  - `src/proxy.ts`: edge-compatible route protection. Only import from `auth.config.ts` and export `NextAuth(authConfig).auth`.
+- References from spec:
+  - Edge compatibility: https://authjs.dev/getting-started/installation#edge-compatibility
+  - Prisma adapter: https://authjs.dev/getting-started/adapters/prisma
 
 ## History
 
