@@ -1,38 +1,12 @@
-# Current Feature: User Authentication
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Install the latest NextAuth/Auth.js packages needed for the app.
-- Add the NextAuth Prisma models: Account, Session, and VerificationToken.
-- Configure NextAuth v5 with the Prisma adapter using the split auth config pattern.
-- Add GitHub OAuth sign-in.
-- Add email/password credentials sign-in.
-- Create a register page with name, email, password, and confirm password fields.
-- Create a sign-in page with an email/password form and GitHub sign-in button.
-- Hash user passwords with bcryptjs during registration.
-- Protect dashboard routes with edge-compatible middleware/proxy behavior.
-- Redirect unauthenticated users to the sign-in page.
-- Show the signed-in user's avatar and name in the top bar.
-- Add a sign-out link in an avatar dropdown.
-- Use the GitHub avatar when available, otherwise show initials.
-
 ## Notes
-
-- Spec loaded from `context/features/next-auth-master-spec.md`.
-- Check current NextAuth/Auth.js, Prisma 7, and Next.js 16 documentation before implementation.
-- Always use Prisma migrations, never `db push`.
-- Migration command from spec: `npx prisma migrate dev --name add-auth-models`.
-- Use the split auth config pattern for Edge compatibility:
-  - `src/lib/auth.config.ts`: base config with providers, JWT session, callbacks, and no Prisma imports. Credentials provider should use an `authorize: () => null` placeholder.
-  - `src/lib/auth.ts`: extends `auth.config`, adds `PrismaAdapter`, and overrides Credentials with real bcrypt validation.
-  - `src/proxy.ts`: edge-compatible route protection. Only import from `auth.config.ts` and export `NextAuth(authConfig).auth`.
-- References from spec:
-  - Edge compatibility: https://authjs.dev/getting-started/installation#edge-compatibility
-  - Prisma adapter: https://authjs.dev/getting-started/adapters/prisma
 
 ## History
 
@@ -54,3 +28,4 @@ In Progress
 - 2026-06-05: Stats & sidebar data work started from `context/features/stats-sidebar-spec.md`.
 - 2026-06-05: Stats & sidebar data work completed with Prisma-backed stats and sidebar data. Verified `/dashboard`, `npm run lint`, and `npm run build`.
 - 2026-06-07: Add Pro Badge To Sidebar completed with subtle `PRO` badges for file and image sidebar item types. Verified `/dashboard`, `npm run lint`, and `npm run build`.
+- 2026-06-08: User Authentication completed with NextAuth/Auth.js v5, GitHub OAuth, credentials sign-in, registration, protected dashboard routes, and dashboard user menu. Verified `/dashboard` redirect behavior, `npm run lint`, and `npm run build`.
