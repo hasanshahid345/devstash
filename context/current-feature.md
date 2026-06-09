@@ -1,8 +1,8 @@
-# Current Feature: Items List View
+# Current Feature
 
 ## Status
 
-Complete
+Not Started
 
 ## Goals
 
