@@ -95,3 +95,9 @@ Example v4 configuration:
 - No commented-out code unless specified
 - No unused imports or variables
 - Keep functions under 50 lines when possible
+
+## Testing
+
+- Use Vitest for unit tests that cover server actions and utility functions.
+- Prefer mocking Prisma, auth, email, Redis, and other external services instead of hitting real infrastructure.
+- Do not add component tests unless they are explicitly requested.
