@@ -2,6 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { isEmailVerificationEnabled } from "@/lib/auth-flags";
 import { prisma } from "@/lib/prisma";
 
 export interface CurrentUser {
@@ -23,6 +24,7 @@ function getInitials(name: string | null | undefined, email: string) {
 }
 
 export async function getCurrentUser(): Promise<CurrentUser> {
+  const emailVerificationEnabled = isEmailVerificationEnabled();
   const session = await auth();
   const email = session?.user?.email;
 
@@ -47,7 +49,7 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     redirect("/sign-in");
   }
 
-  if (user.password && !user.emailVerified) {
+  if (emailVerificationEnabled && user.password && !user.emailVerified) {
     redirect("/sign-in?error=email_not_verified");
   }
 
@@ -63,6 +65,7 @@ export async function getCurrentUser(): Promise<CurrentUser> {
 }
 
 export async function getSignedInUserForAuthPages(): Promise<CurrentUser | null> {
+  const emailVerificationEnabled = isEmailVerificationEnabled();
   const session = await auth();
   const email = session?.user?.email;
 
@@ -87,7 +90,7 @@ export async function getSignedInUserForAuthPages(): Promise<CurrentUser | null>
     return null;
   }
 
-  if (user.password && !user.emailVerified) {
+  if (emailVerificationEnabled && user.password && !user.emailVerified) {
     return null;
   }
 

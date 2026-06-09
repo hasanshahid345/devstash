@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { signIn, signOut } from "@/lib/auth";
+import { isEmailVerificationEnabled } from "@/lib/auth-flags";
 import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email-verification";
 import { prisma } from "@/lib/prisma";
 
@@ -98,6 +99,7 @@ export async function registerWithCredentials(
   _state: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const emailVerificationEnabled = isEmailVerificationEnabled();
   const parsedFields = registerSchema.safeParse({
     name: getFormString(formData, "name"),
     email: getFormString(formData, "email"),
@@ -135,6 +137,7 @@ export async function registerWithCredentials(
       name: parsedFields.data.name,
       email: parsedFields.data.email,
       password: hashedPassword,
+      emailVerified: emailVerificationEnabled ? null : new Date(),
     },
     select: {
       id: true,
@@ -142,6 +145,19 @@ export async function registerWithCredentials(
       email: true,
     },
   });
+
+  if (!emailVerificationEnabled) {
+    await signIn("credentials", {
+      email: parsedFields.data.email,
+      password: parsedFields.data.password,
+      redirectTo: "/dashboard",
+    });
+
+    return {
+      success: true,
+      error: null,
+    };
+  }
 
   const verificationToken = await createEmailVerificationToken(user.email);
 

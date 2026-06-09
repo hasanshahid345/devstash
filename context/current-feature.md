@@ -32,3 +32,4 @@ Not Started
 - 2026-06-07: Add Pro Badge To Sidebar completed with subtle `PRO` badges for file and image sidebar item types. Verified `/dashboard`, `npm run lint`, and `npm run build`.
 - 2026-06-08: User Authentication completed with NextAuth/Auth.js v5, GitHub OAuth, credentials sign-in, registration, protected dashboard routes, and dashboard user menu. Verified `/dashboard` redirect behavior, `npm run lint`, and `npm run build`.
 - 2026-06-08: Email Verification completed with Resend-backed verification emails, a `/verify-email` flow, and server-side blocking for unverified password users. Verified with `cmd /c npm run lint` and `cmd /c npm run build`.
+- 2026-06-09: Toggle Email Verification completed with an `AUTH_EMAIL_VERIFICATION_ENABLED` env flag that disables verification flow, auto-verifies registrations, and keeps the existing verified path when enabled. Verified with `cmd /c npm run lint` and `cmd /c npm run build`.

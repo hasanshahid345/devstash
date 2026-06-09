@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import { z } from "zod";
 import { authConfig } from "@/lib/auth.config";
+import { isEmailVerificationEnabled } from "@/lib/auth-flags";
 import { prisma } from "@/lib/prisma";
 
 class EmailNotVerifiedError extends CredentialsSignin {
@@ -57,7 +58,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return null;
         }
 
-        if (!user.emailVerified) {
+        if (isEmailVerificationEnabled() && !user.emailVerified) {
           throw new EmailNotVerifiedError();
         }
 
