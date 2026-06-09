@@ -1,22 +1,14 @@
-# Current Feature: Email Verification
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add email verification using Resend.
-- Send a verification link during registration.
-- Require users to click the verification link before they can complete sign-in or access authenticated areas.
-- Use the Resend API key from the existing `.env` configuration.
-- Keep the flow aligned with the current Auth.js/NextAuth setup and existing app patterns.
 
 ## Notes
 
-- Loaded from the inline feature request: setup email verification using Resend.
-- The Resend API key already exists in `.env`.
-- Prefer minimal changes that preserve the current authentication flow unless verification requires a small auth adjustment.
 
 ## History
 
@@ -39,3 +31,4 @@ In Progress
 - 2026-06-05: Stats & sidebar data work completed with Prisma-backed stats and sidebar data. Verified `/dashboard`, `npm run lint`, and `npm run build`.
 - 2026-06-07: Add Pro Badge To Sidebar completed with subtle `PRO` badges for file and image sidebar item types. Verified `/dashboard`, `npm run lint`, and `npm run build`.
 - 2026-06-08: User Authentication completed with NextAuth/Auth.js v5, GitHub OAuth, credentials sign-in, registration, protected dashboard routes, and dashboard user menu. Verified `/dashboard` redirect behavior, `npm run lint`, and `npm run build`.
+- 2026-06-08: Email Verification completed with Resend-backed verification emails, a `/verify-email` flow, and server-side blocking for unverified password users. Verified with `cmd /c npm run lint` and `cmd /c npm run build`.
