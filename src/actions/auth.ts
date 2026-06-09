@@ -3,6 +3,7 @@
 import { AuthError, CredentialsSignin } from "next-auth";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { auth, signIn, signOut } from "@/lib/auth";
@@ -13,6 +14,11 @@ import {
   findPasswordResetToken,
   sendPasswordResetEmail,
 } from "@/lib/password-reset";
+import {
+  AUTH_RATE_LIMITS,
+  checkRateLimit,
+  getRateLimitMessage,
+} from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export interface AuthFormState {
@@ -40,6 +46,10 @@ const passwordResetRequestSchema = z.object({
   email: z.email({ error: "Enter a valid email address." }).trim().toLowerCase(),
 });
 
+const resendVerificationSchema = z.object({
+  email: z.email({ error: "Enter a valid email address." }).trim().toLowerCase(),
+});
+
 const deleteAccountSchema = z.object({
   confirmEmail: z.email({ error: "Enter your account email address." }).trim().toLowerCase(),
 });
@@ -62,6 +72,10 @@ function getFormString(formData: FormData, key: string) {
 
 function getAuthErrorMessage(error: unknown) {
   if (error instanceof AuthError) {
+    if (error instanceof CredentialsSignin && error.code === "rate_limited") {
+      return "Too many sign-in attempts. Please try again in a few minutes.";
+    }
+
     if (error instanceof CredentialsSignin && error.code === "email_not_verified") {
       return "Verify your email address before signing in.";
     }
@@ -135,6 +149,20 @@ export async function registerWithCredentials(
     return {
       success: false,
       error: parsedFields.error.issues[0]?.message ?? "Check your registration details.",
+    };
+  }
+
+  const registrationRateLimit = await checkRateLimit({
+    route: AUTH_RATE_LIMITS.register.route,
+    limit: AUTH_RATE_LIMITS.register.limit,
+    window: AUTH_RATE_LIMITS.register.window,
+    headers: await headers(),
+  });
+
+  if (!registrationRateLimit.success) {
+    return {
+      success: false,
+      error: getRateLimitMessage(registrationRateLimit),
     };
   }
 
@@ -251,6 +279,20 @@ export async function requestCurrentUserPasswordReset(): Promise<AuthFormState> 
     };
   }
 
+  const passwordResetRateLimit = await checkRateLimit({
+    route: AUTH_RATE_LIMITS.forgotPassword.route,
+    limit: AUTH_RATE_LIMITS.forgotPassword.limit,
+    window: AUTH_RATE_LIMITS.forgotPassword.window,
+    headers: await headers(),
+  });
+
+  if (!passwordResetRateLimit.success) {
+    return {
+      success: false,
+      error: getRateLimitMessage(passwordResetRateLimit),
+    };
+  }
+
   const resetToken = await createPasswordResetToken(user.email);
 
   try {
@@ -278,6 +320,78 @@ export async function requestCurrentUserPasswordReset(): Promise<AuthFormState> 
     success: true,
     error: null,
   };
+}
+
+export async function requestEmailVerificationResend(
+  _state: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsedFields = resendVerificationSchema.safeParse({
+    email: getFormString(formData, "email"),
+  });
+
+  if (!parsedFields.success) {
+    return {
+      success: false,
+      error: parsedFields.error.issues[0]?.message ?? "Enter your email address.",
+    };
+  }
+
+  const verificationRateLimit = await checkRateLimit({
+    route: AUTH_RATE_LIMITS.resendVerification.route,
+    limit: AUTH_RATE_LIMITS.resendVerification.limit,
+    window: AUTH_RATE_LIMITS.resendVerification.window,
+    headers: await headers(),
+    identifier: parsedFields.data.email,
+  });
+
+  if (!verificationRateLimit.success) {
+    return {
+      success: false,
+      error: getRateLimitMessage(verificationRateLimit),
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: parsedFields.data.email,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      emailVerified: true,
+    },
+  });
+
+  if (!user || user.emailVerified) {
+    redirect("/sign-in?verification_sent=1");
+  }
+
+  const verificationToken = await createEmailVerificationToken(user.email);
+
+  try {
+    await sendVerificationEmail({
+      email: user.email,
+      name: user.name ?? "there",
+      token: verificationToken.token,
+    });
+  } catch (error) {
+    await prisma.verificationToken.deleteMany({
+      where: {
+        token: verificationToken.token,
+      },
+    });
+
+    unstable_rethrow(error);
+
+    return {
+      success: false,
+      error: "We could not send the verification email. Please try again.",
+    };
+  }
+
+  redirect("/sign-in?verification_sent=1");
 }
 
 export async function deleteCurrentUserAccount(
@@ -366,6 +480,20 @@ export async function requestPasswordReset(
     };
   }
 
+  const passwordResetRateLimit = await checkRateLimit({
+    route: AUTH_RATE_LIMITS.forgotPassword.route,
+    limit: AUTH_RATE_LIMITS.forgotPassword.limit,
+    window: AUTH_RATE_LIMITS.forgotPassword.window,
+    headers: await headers(),
+  });
+
+  if (!passwordResetRateLimit.success) {
+    return {
+      success: false,
+      error: getRateLimitMessage(passwordResetRateLimit),
+    };
+  }
+
   const user = await prisma.user.findUnique({
     where: {
       email: parsedFields.data.email,
@@ -421,6 +549,20 @@ export async function resetPassword(
     return {
       success: false,
       error: parsedFields.error.issues[0]?.message ?? "Check your new password.",
+    };
+  }
+
+  const resetRateLimit = await checkRateLimit({
+    route: AUTH_RATE_LIMITS.resetPassword.route,
+    limit: AUTH_RATE_LIMITS.resetPassword.limit,
+    window: AUTH_RATE_LIMITS.resetPassword.window,
+    headers: await headers(),
+  });
+
+  if (!resetRateLimit.success) {
+    return {
+      success: false,
+      error: getRateLimitMessage(resetRateLimit),
     };
   }
 

@@ -6,6 +6,7 @@ import GitHub from "next-auth/providers/github";
 import { z } from "zod";
 import { authConfig } from "@/lib/auth.config";
 import { isEmailVerificationEnabled } from "@/lib/auth-flags";
+import { AUTH_RATE_LIMITS, RateLimitedCredentialsSignin, checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 class EmailNotVerifiedError extends CredentialsSignin {
@@ -33,7 +34,19 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        const loginRateLimit = await checkRateLimit({
+          route: AUTH_RATE_LIMITS.login.route,
+          limit: AUTH_RATE_LIMITS.login.limit,
+          window: AUTH_RATE_LIMITS.login.window,
+          headers: request.headers,
+          identifier: typeof credentials?.email === "string" ? credentials.email : undefined,
+        });
+
+        if (!loginRateLimit.success) {
+          throw new RateLimitedCredentialsSignin();
+        }
+
         const parsedCredentials = credentialsSchema.safeParse(credentials);
 
         if (!parsedCredentials.success) {

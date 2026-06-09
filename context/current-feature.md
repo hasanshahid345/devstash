@@ -6,9 +6,7 @@ Not Started
 
 ## Goals
 
-
 ## Notes
-
 
 ## History
 
@@ -35,3 +33,4 @@ Not Started
 - 2026-06-09: Toggle Email Verification completed with an `AUTH_EMAIL_VERIFICATION_ENABLED` env flag that disables verification flow, auto-verifies registrations, and keeps the existing verified path when enabled. Verified with `cmd /c npm run lint` and `cmd /c npm run build`.
 - 2026-06-09: Forgot Password completed with a reset-link flow that reuses the existing `VerificationToken` model, adds `/forgot-password` and `/reset-password`, and updates passwords from the reset link. Verified with `cmd /c npm run lint` and `cmd /c npm run build`.
 - 2026-06-09: Profile Page completed with a protected `/profile` route, user info, usage stats, item type breakdown, password reset action for email users, and delete account confirmation. Verified with `cmd /c npm run lint`, `cmd /c npm run build`, and unauthenticated `/profile` sign-in response.
+- 2026-06-09: Rate Limiting for Auth completed with a reusable Upstash-backed limiter, protected credentials login, registration, password reset, and verification resend flows, and surfaced friendly rate-limit errors in the sign-in UI. Verified with `cmd /c npm run lint` and `cmd /c npm run build`.
