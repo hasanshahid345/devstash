@@ -1,12 +1,22 @@
-# Current Feature
+# Current Feature: Email Verification
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Add email verification using Resend.
+- Send a verification link during registration.
+- Require users to click the verification link before they can complete sign-in or access authenticated areas.
+- Use the Resend API key from the existing `.env` configuration.
+- Keep the flow aligned with the current Auth.js/NextAuth setup and existing app patterns.
+
 ## Notes
+
+- Loaded from the inline feature request: setup email verification using Resend.
+- The Resend API key already exists in `.env`.
+- Prefer minimal changes that preserve the current authentication flow unless verification requires a small auth adjustment.
 
 ## History
 

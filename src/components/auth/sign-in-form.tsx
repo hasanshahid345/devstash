@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import { signInWithCredentials, signInWithGitHub, type AuthFormState } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,22 @@ const initialState: AuthFormState = {
 
 export function SignInForm() {
   const [state, formAction, isPending] = useActionState(signInWithCredentials, initialState);
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified");
+  const registered = searchParams.get("registered");
+  const authError = searchParams.get("error");
+  const bannerMessage =
+    verified === "1"
+      ? "Your email has been verified. You can sign in now."
+      : registered === "1"
+        ? "Check your inbox for a verification link before signing in."
+        : authError === "email_not_verified"
+          ? "Verify your email address before signing in."
+          : authError === "invalid_token"
+            ? "That verification link is invalid or expired."
+            : authError === "missing_token"
+              ? "The verification link is missing a token."
+              : null;
 
   return (
     <div className="w-full max-w-[440px] space-y-6">
@@ -21,6 +38,12 @@ export function SignInForm() {
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-50">Sign in</h1>
         <p className="text-sm text-zinc-400">Access your DevStash workspace.</p>
       </div>
+
+      {bannerMessage ? (
+        <p className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+          {bannerMessage}
+        </p>
+      ) : null}
 
       <form action={formAction} className="space-y-4">
         <div className="space-y-2">

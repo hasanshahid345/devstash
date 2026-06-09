@@ -1,11 +1,12 @@
 "use server";
 
-import { AuthError } from "next-auth";
+import { AuthError, CredentialsSignin } from "next-auth";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { signIn, signOut } from "@/lib/auth";
+import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email-verification";
 import { prisma } from "@/lib/prisma";
 
 export interface AuthFormState {
@@ -36,6 +37,10 @@ function getFormString(formData: FormData, key: string) {
 
 function getAuthErrorMessage(error: unknown) {
   if (error instanceof AuthError) {
+    if (error instanceof CredentialsSignin && error.code === "email_not_verified") {
+      return "Verify your email address before signing in.";
+    }
+
     if (error.type === "CredentialsSignin") {
       return "Invalid email or password.";
     }
@@ -125,30 +130,50 @@ export async function registerWithCredentials(
 
   const hashedPassword = await bcrypt.hash(parsedFields.data.password, 12);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name: parsedFields.data.name,
       email: parsedFields.data.email,
       password: hashedPassword,
     },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
   });
 
+  const verificationToken = await createEmailVerificationToken(user.email);
+
   try {
-    await signIn("credentials", {
-      email: parsedFields.data.email,
-      password: parsedFields.data.password,
-      redirectTo: "/dashboard",
+    await sendVerificationEmail({
+      email: user.email,
+      name: user.name ?? "there",
+      token: verificationToken.token,
     });
   } catch (error) {
+    await prisma.$transaction([
+      prisma.verificationToken.deleteMany({
+        where: {
+          token: verificationToken.token,
+        },
+      }),
+      prisma.user.delete({
+        where: {
+          id: user.id,
+        },
+      }),
+    ]);
+
     unstable_rethrow(error);
 
     return {
       success: false,
-      error: getAuthErrorMessage(error),
+      error: "We could not send the verification email. Please try again.",
     };
   }
 
-  redirect("/dashboard");
+  redirect("/sign-in?registered=1");
 }
 
 export async function signOutCurrentUser() {

@@ -2,6 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export interface CurrentUser {
   id: string;
@@ -29,13 +30,74 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     redirect("/sign-in");
   }
 
-  const name = session.user.name ?? "DevStash User";
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+    select: {
+      name: true,
+      email: true,
+      image: true,
+      password: true,
+      emailVerified: true,
+    },
+  });
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  if (user.password && !user.emailVerified) {
+    redirect("/sign-in?error=email_not_verified");
+  }
+
+  const name = user.name ?? session.user.name ?? "DevStash User";
 
   return {
     id: session.user.id,
     name,
-    email,
-    image: session.user.image ?? null,
+    email: user.email ?? email,
+    image: user.image ?? session.user.image ?? null,
+    initials: getInitials(name, email),
+  };
+}
+
+export async function getSignedInUserForAuthPages(): Promise<CurrentUser | null> {
+  const session = await auth();
+  const email = session?.user?.email;
+
+  if (!session?.user?.id || !email) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+    select: {
+      name: true,
+      email: true,
+      image: true,
+      password: true,
+      emailVerified: true,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  if (user.password && !user.emailVerified) {
+    return null;
+  }
+
+  const name = user.name ?? session.user.name ?? "DevStash User";
+
+  return {
+    id: session.user.id,
+    name,
+    email: user.email ?? email,
+    image: user.image ?? session.user.image ?? null,
     initials: getInitials(name, email),
   };
 }
