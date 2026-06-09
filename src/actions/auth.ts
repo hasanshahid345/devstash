@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { unstable_rethrow } from "next/navigation";
 import { z } from "zod";
-import { signIn, signOut } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import { isEmailVerificationEnabled } from "@/lib/auth-flags";
 import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email-verification";
 import {
@@ -38,6 +38,10 @@ const registerSchema = signInSchema
 
 const passwordResetRequestSchema = z.object({
   email: z.email({ error: "Enter a valid email address." }).trim().toLowerCase(),
+});
+
+const deleteAccountSchema = z.object({
+  confirmEmail: z.email({ error: "Enter your account email address." }).trim().toLowerCase(),
 });
 
 const passwordResetSchema = z
@@ -216,6 +220,135 @@ export async function signOutCurrentUser() {
   await signOut({
     redirectTo: "/sign-in",
   });
+}
+
+export async function requestCurrentUserPasswordReset(): Promise<AuthFormState> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/sign-in");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+    select: {
+      name: true,
+      email: true,
+      password: true,
+    },
+  });
+
+  if (!user?.email) {
+    redirect("/sign-in");
+  }
+
+  if (!user.password) {
+    return {
+      success: false,
+      error: "Password changes are only available for email accounts.",
+    };
+  }
+
+  const resetToken = await createPasswordResetToken(user.email);
+
+  try {
+    await sendPasswordResetEmail({
+      email: user.email,
+      name: user.name ?? "there",
+      token: resetToken.token,
+    });
+  } catch (error) {
+    await prisma.verificationToken.deleteMany({
+      where: {
+        token: resetToken.token,
+      },
+    });
+
+    unstable_rethrow(error);
+
+    return {
+      success: false,
+      error: "We could not send the password reset email. Please try again.",
+    };
+  }
+
+  return {
+    success: true,
+    error: null,
+  };
+}
+
+export async function deleteCurrentUserAccount(
+  _state: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/sign-in");
+  }
+
+  const parsedFields = deleteAccountSchema.safeParse({
+    confirmEmail: getFormString(formData, "confirmEmail"),
+  });
+
+  if (!parsedFields.success) {
+    return {
+      success: false,
+      error: parsedFields.error.issues[0]?.message ?? "Confirm your email address.",
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+    select: {
+      email: true,
+    },
+  });
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  if (parsedFields.data.confirmEmail !== user.email.toLowerCase()) {
+    return {
+      success: false,
+      error: "The email address does not match your account.",
+    };
+  }
+
+  await prisma.$transaction([
+    prisma.verificationToken.deleteMany({
+      where: {
+        OR: [
+          {
+            identifier: user.email,
+          },
+          {
+            identifier: `password-reset:${user.email}`,
+          },
+        ],
+      },
+    }),
+    prisma.user.delete({
+      where: {
+        id: session.user.id,
+      },
+    }),
+  ]);
+
+  await signOut({
+    redirectTo: "/sign-in?account_deleted=1",
+  });
+
+  return {
+    success: true,
+    error: null,
+  };
 }
 
 export async function requestPasswordReset(

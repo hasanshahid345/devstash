@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { LogOut, UserRound } from "lucide-react";
 import { signOutCurrentUser } from "@/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,17 @@ export function UserMenu({ user }: { user: UserMenuUser }) {
         <div className="border-b border-white/8 px-3 py-2">
           <p className="truncate text-sm font-medium text-zinc-100">{user.name}</p>
           <p className="truncate text-xs text-zinc-500">{user.email}</p>
+        </div>
+        <div className="pt-2">
+          <Link
+            href="/profile"
+            role="menuitem"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/[0.05] hover:text-white"
+            onClick={() => setIsOpen(false)}
+          >
+            <UserRound className="size-4" />
+            Profile
+          </Link>
         </div>
         <form action={signOutCurrentUser} className="pt-2">
           <button
