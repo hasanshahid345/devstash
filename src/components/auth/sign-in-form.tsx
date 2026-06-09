@@ -3,12 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
-import {
-  requestEmailVerificationResend,
-  signInWithCredentials,
-  signInWithGitHub,
-  type AuthFormState,
-} from "@/actions/auth";
+import { signInWithCredentials, signInWithGitHub, type AuthFormState } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -19,10 +14,6 @@ const initialState: AuthFormState = {
 
 export function SignInForm() {
   const [state, formAction, isPending] = useActionState(signInWithCredentials, initialState);
-  const [resendState, resendFormAction, resendIsPending] = useActionState(
-    requestEmailVerificationResend,
-    initialState,
-  );
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified");
   const registered = searchParams.get("registered");
@@ -102,39 +93,6 @@ export function SignInForm() {
       <form action={signInWithGitHub}>
         <Button type="submit" variant="outline" className="w-full">
           Sign in with GitHub
-        </Button>
-      </form>
-
-      <form action={resendFormAction} className="space-y-4 rounded-xl border border-zinc-800/80 bg-zinc-950/70 p-4">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-zinc-200">Need a new verification link?</p>
-          <p className="text-sm text-zinc-400">
-            Enter your email and we&apos;ll send another verification link if the account needs
-            one.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="verification-email" className="text-sm font-medium text-zinc-300">
-            Email
-          </label>
-          <Input
-            id="verification-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-          />
-        </div>
-
-        {resendState.error ? (
-          <p className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-            {resendState.error}
-          </p>
-        ) : null}
-
-        <Button type="submit" variant="outline" className="w-full" disabled={resendIsPending}>
-          {resendIsPending ? "Sending..." : "Resend verification email"}
         </Button>
       </form>
 
