@@ -13,6 +13,7 @@ import type { DashboardSidebarData } from "@/lib/db/items";
 
 const StarIcon = LucideIcons.Star;
 const ArrowRightIcon = LucideIcons.ArrowRight;
+const UserRoundIcon = LucideIcons.UserRound;
 
 function getTypeHref(name: string) {
   return `/items/${slugify(name)}`;
@@ -393,15 +394,31 @@ export default function DashboardSidebar({
             </div>
           </div>
 
-          <div className="border-t border-white/8 p-3">
-            <div
+          <div className="space-y-2 border-t border-white/8 p-3">
+            <Link
+              href="/profile"
+              onNavigate={closeMobileSidebarIfNeeded}
               className={cn(
-                "flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3",
+                "flex items-center gap-3 rounded-xl px-2.5 py-2 text-[15px] text-zinc-200 transition-colors hover:bg-white/5 hover:text-white",
+                isSidebarCollapsed ? "lg:justify-center lg:px-0" : "",
+              )}
+              title="Profile"
+            >
+              <UserRoundIcon className="size-4 shrink-0 text-zinc-400" />
+              <span className={cn(isSidebarCollapsed ? "lg:hidden" : "")}>Profile</span>
+            </Link>
+
+            <Link
+              href="/profile"
+              onNavigate={closeMobileSidebarIfNeeded}
+              className={cn(
+                "flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3 transition-colors hover:border-white/15 hover:bg-white/[0.06]",
                 isSidebarCollapsed ? "lg:justify-center lg:px-2" : "",
               )}
+              title="Open profile"
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 overflow-hidden rounded-full bg-zinc-200 text-sm font-semibold text-zinc-900">
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="flex h-11 w-11 overflow-hidden rounded-full bg-zinc-200 text-sm font-semibold text-zinc-900">
                   {data.user.image ? (
                     <Image
                       src={data.user.image}
@@ -413,12 +430,12 @@ export default function DashboardSidebar({
                   ) : (
                     <span className="m-auto">{data.user.initials}</span>
                   )}
-                </div>
-                <div className={cn("min-w-0", isSidebarCollapsed ? "lg:hidden" : "")}>
-                  <p className="truncate text-sm font-medium">{data.user.name}</p>
-                  <p className="truncate text-xs text-zinc-500">{data.user.email}</p>
-                </div>
-              </div>
+                </span>
+                <span className={cn("min-w-0", isSidebarCollapsed ? "lg:hidden" : "")}>
+                  <span className="block truncate text-sm font-medium">{data.user.name}</span>
+                  <span className="block truncate text-xs text-zinc-500">{data.user.email}</span>
+                </span>
+              </span>
               <span
                 className={cn(
                   "rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300",
@@ -427,7 +444,7 @@ export default function DashboardSidebar({
               >
                 {data.user.isPro ? "Pro" : "Free"}
               </span>
-            </div>
+            </Link>
           </div>
         </div>
       </aside>
