@@ -19,17 +19,25 @@ export function SignInForm() {
   const registered = searchParams.get("registered");
   const authError = searchParams.get("error");
   const bannerMessage =
-    verified === "1"
-      ? "Your email has been verified. You can sign in now."
-      : registered === "1"
-        ? "Check your inbox for a verification link before signing in."
-        : authError === "email_not_verified"
-          ? "Verify your email address before signing in."
-          : authError === "invalid_token"
-            ? "That verification link is invalid or expired."
-            : authError === "missing_token"
-              ? "The verification link is missing a token."
-              : null;
+      verified === "1"
+        ? "Your email has been verified. You can sign in now."
+        : searchParams.get("reset") === "1"
+          ? "Your password has been updated. You can sign in now."
+        : registered === "1"
+          ? "Check your inbox for a verification link before signing in."
+          : searchParams.get("reset_sent") === "1"
+            ? "If an account exists for that email, we sent a password reset link."
+          : authError === "email_not_verified"
+            ? "Verify your email address before signing in."
+            : authError === "invalid_token"
+              ? "That verification link is invalid or expired."
+              : authError === "missing_token"
+                ? "The verification link is missing a token."
+                : authError === "invalid_reset_token"
+                  ? "That password reset link is invalid or expired."
+                  : authError === "missing_reset_token"
+                    ? "The password reset link is missing a token."
+                  : null;
 
   return (
     <div className="w-full max-w-[440px] space-y-6">
@@ -82,6 +90,13 @@ export function SignInForm() {
           Sign in with GitHub
         </Button>
       </form>
+
+      <p className="text-sm text-zinc-400">
+        Forgot your password?{" "}
+        <Link href="/forgot-password" className="font-medium text-zinc-100 hover:text-white">
+          Reset it
+        </Link>
+      </p>
 
       <p className="text-sm text-zinc-400">
         Need an account?{" "}

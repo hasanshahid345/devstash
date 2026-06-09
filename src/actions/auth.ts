@@ -8,6 +8,11 @@ import { z } from "zod";
 import { signIn, signOut } from "@/lib/auth";
 import { isEmailVerificationEnabled } from "@/lib/auth-flags";
 import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email-verification";
+import {
+  createPasswordResetToken,
+  findPasswordResetToken,
+  sendPasswordResetEmail,
+} from "@/lib/password-reset";
 import { prisma } from "@/lib/prisma";
 
 export interface AuthFormState {
@@ -23,6 +28,21 @@ const signInSchema = z.object({
 const registerSchema = signInSchema
   .extend({
     name: z.string().trim().min(2, "Name must be at least 2 characters."),
+    password: z.string().min(8, "Password must be at least 8 characters."),
+    confirmPassword: z.string().min(1, "Confirm your password."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
+const passwordResetRequestSchema = z.object({
+  email: z.email({ error: "Enter a valid email address." }).trim().toLowerCase(),
+});
+
+const passwordResetSchema = z
+  .object({
+    token: z.string().min(1, "The reset link is missing a token."),
     password: z.string().min(8, "Password must be at least 8 characters."),
     confirmPassword: z.string().min(1, "Confirm your password."),
   })
@@ -196,4 +216,131 @@ export async function signOutCurrentUser() {
   await signOut({
     redirectTo: "/sign-in",
   });
+}
+
+export async function requestPasswordReset(
+  _state: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsedFields = passwordResetRequestSchema.safeParse({
+    email: getFormString(formData, "email"),
+  });
+
+  if (!parsedFields.success) {
+    return {
+      success: false,
+      error: parsedFields.error.issues[0]?.message ?? "Enter your email address.",
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: parsedFields.data.email,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+
+  if (!user) {
+    redirect("/sign-in?reset_sent=1");
+  }
+
+  const resetToken = await createPasswordResetToken(user.email);
+
+  try {
+    await sendPasswordResetEmail({
+      email: user.email,
+      name: user.name ?? "there",
+      token: resetToken.token,
+    });
+  } catch (error) {
+    await prisma.verificationToken.deleteMany({
+      where: {
+        token: resetToken.token,
+      },
+    });
+
+    unstable_rethrow(error);
+
+    return {
+      success: false,
+      error: "We could not send the password reset email. Please try again.",
+    };
+  }
+
+  redirect("/sign-in?reset_sent=1");
+}
+
+export async function resetPassword(
+  _state: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsedFields = passwordResetSchema.safeParse({
+    token: getFormString(formData, "token"),
+    password: getFormString(formData, "password"),
+    confirmPassword: getFormString(formData, "confirmPassword"),
+  });
+
+  if (!parsedFields.success) {
+    return {
+      success: false,
+      error: parsedFields.error.issues[0]?.message ?? "Check your new password.",
+    };
+  }
+
+  const resetToken = await findPasswordResetToken(parsedFields.data.token);
+
+  if (!resetToken || resetToken.expires < new Date()) {
+    return {
+      success: false,
+      error: "That password reset link is invalid or expired.",
+    };
+  }
+
+  const email = resetToken.identifier.slice("password-reset:".length);
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!user) {
+    await prisma.verificationToken.deleteMany({
+      where: {
+        token: parsedFields.data.token,
+      },
+    });
+
+    return {
+      success: false,
+      error: "That password reset link is invalid or expired.",
+    };
+  }
+
+  const hashedPassword = await bcrypt.hash(parsedFields.data.password, 12);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        password: hashedPassword,
+        emailVerified: new Date(),
+      },
+    }),
+    prisma.verificationToken.deleteMany({
+      where: {
+        token: parsedFields.data.token,
+      },
+    }),
+  ]);
+
+  redirect("/sign-in?reset=1");
 }
