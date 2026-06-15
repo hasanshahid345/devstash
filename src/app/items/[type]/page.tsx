@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
+import { ItemDrawerCardTrigger, ItemDrawerProvider } from "@/components/items/item-drawer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/current-user";
-import { getTypeIconClassName } from "@/lib/db/type-styles";
+import { getTypeBorderClassName, getTypeIconClassName } from "@/lib/db/type-styles";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
 
@@ -63,8 +64,10 @@ export default async function ItemTypePage({
       },
     },
   });
+  const borderClassName = getTypeBorderClassName(itemType.name);
 
   return (
+    <ItemDrawerProvider>
     <section className="space-y-6">
       <div className="space-y-2">
         <Link href="/items" className="text-sm text-zinc-400 transition-colors hover:text-zinc-200">
@@ -86,18 +89,23 @@ export default async function ItemTypePage({
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {items.map((item) => (
-          <Card key={item.id} className="border-white/10 bg-black/20">
-            <CardHeader>
-              <CardTitle className="text-xl">{item.title}</CardTitle>
-              <CardDescription>{item.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="mt-0 flex items-center justify-between text-sm text-zinc-500">
-              <span>{item.tags.map((entry) => entry.tag.name).join(" | ")}</span>
-              <span>{formatDate(item.updatedAt)}</span>
-            </CardContent>
-          </Card>
+          <ItemDrawerCardTrigger key={item.id} itemId={item.id}>
+            <Card
+              className={`relative h-full overflow-hidden border-white/10 bg-black/20 before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] ${borderClassName}`}
+            >
+              <CardHeader>
+                <CardTitle className="text-xl">{item.title}</CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="mt-0 flex items-center justify-between gap-4 text-sm text-zinc-500">
+                <span className="min-w-0 truncate">{item.tags.map((entry) => entry.tag.name).join(" | ")}</span>
+                <span className="shrink-0">{formatDate(item.updatedAt)}</span>
+              </CardContent>
+            </Card>
+          </ItemDrawerCardTrigger>
         ))}
       </div>
     </section>
+    </ItemDrawerProvider>
   );
 }

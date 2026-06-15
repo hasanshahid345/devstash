@@ -1,12 +1,31 @@
-# Current Feature
+# Current Feature: Item Drawer Edit Mode
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Add inline edit mode to the existing item drawer when the Edit action is clicked.
+- Replace the drawer action bar with Save and Cancel controls while editing.
+- Save changes through an `updateItem(itemId, data)` server action in `src/actions/items.ts`.
+- Validate the update payload with Zod before database writes.
+- Update item data in `src/lib/db/items.ts`, including disconnecting existing tags and connect-or-creating submitted tags.
+- Return the updated `ItemDetail` after save so the drawer can refresh without a second fetch.
+- Show success and error toast notifications for save attempts.
+- Refresh the route after save so the underlying item cards reflect edits.
+
 ## Notes
+
+- Spec source: `context/features/item-drawer-edit-spec.md`.
+- Edit mode stays inside the same open drawer; there is no navigation to a separate page.
+- Cancel discards local changes and returns to view mode.
+- Editable fields for all item types: title, description, and comma-separated tags.
+- Type-specific editable fields: content for snippet, prompt, command, and note; language for snippet and command; URL for link.
+- Display-only fields in edit mode: item type, collections, created date, and updated date.
+- Keep the form simple with controlled inputs; no form library is needed.
+- Disable Save on the client when the title is empty, but keep server-side Zod validation as the source of truth.
+- The content textarea does not need to be a code editor yet.
 
 ## History
 
