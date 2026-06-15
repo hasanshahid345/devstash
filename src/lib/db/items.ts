@@ -7,6 +7,8 @@ import {
   getTypeDotClassName,
   getTypeIconClassName,
 } from "@/lib/db/type-styles";
+import type { ItemDetail } from "@/types/items";
+import type { UpdateItemInput } from "@/types/items";
 
 export interface DashboardItemCard {
   id: string;
@@ -324,3 +326,205 @@ export const getDashboardSidebarData = cache(async (userEmail: string): Promise<
     },
   };
 });
+
+export async function getItemDetailById(itemId: string, userEmail: string): Promise<ItemDetail | null> {
+  const item = await prisma.item.findFirst({
+    where: {
+      id: itemId,
+      user: {
+        email: userEmail,
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      contentType: true,
+      content: true,
+      fileUrl: true,
+      fileName: true,
+      fileSize: true,
+      url: true,
+      isFavorite: true,
+      isPinned: true,
+      language: true,
+      createdAt: true,
+      updatedAt: true,
+      type: {
+        select: {
+          name: true,
+          icon: true,
+        },
+      },
+      collection: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      tags: {
+        select: {
+          tag: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!item) {
+    return null;
+  }
+
+  return mapItemDetail(item);
+}
+
+export async function updateItem(
+  itemId: string,
+  userEmail: string,
+  data: UpdateItemInput,
+): Promise<ItemDetail | null> {
+  const item = await prisma.item.findFirst({
+    where: {
+      id: itemId,
+      user: {
+        email: userEmail,
+      },
+    },
+    select: {
+      id: true,
+      userId: true,
+    },
+  });
+
+  if (!item) {
+    return null;
+  }
+
+  const updatedItem = await prisma.item.update({
+    where: {
+      id: item.id,
+    },
+    data: {
+      title: data.title,
+      description: data.description,
+      content: data.content,
+      url: data.url,
+      language: data.language,
+      tags: {
+        deleteMany: {},
+        create: data.tags.map((tagName) => ({
+          tag: {
+            connectOrCreate: {
+              where: {
+                userId_name: {
+                  userId: item.userId,
+                  name: tagName,
+                },
+              },
+              create: {
+                name: tagName,
+                userId: item.userId,
+              },
+            },
+          },
+        })),
+      },
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      contentType: true,
+      content: true,
+      fileUrl: true,
+      fileName: true,
+      fileSize: true,
+      url: true,
+      isFavorite: true,
+      isPinned: true,
+      language: true,
+      createdAt: true,
+      updatedAt: true,
+      type: {
+        select: {
+          name: true,
+          icon: true,
+        },
+      },
+      collection: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      tags: {
+        select: {
+          tag: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return mapItemDetail(updatedItem);
+}
+
+function mapItemDetail(item: {
+  id: string;
+  title: string;
+  description: string | null;
+  contentType: string;
+  content: string | null;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  url: string | null;
+  isFavorite: boolean;
+  isPinned: boolean;
+  language: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  type: {
+    name: string;
+    icon: string | null;
+  };
+  collection: {
+    id: string;
+    name: string;
+  } | null;
+  tags: Array<{
+    tag: {
+      name: string;
+    };
+  }>;
+}): ItemDetail {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description ?? "",
+    contentType: item.contentType,
+    content: item.content,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
+    url: item.url,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    language: item.language,
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
+    type: {
+      name: item.type.name,
+      iconName: item.type.icon ?? "Circle",
+      iconClassName: getTypeIconClassName(item.type.name),
+    },
+    collection: item.collection,
+    tags: item.tags.map((entry) => entry.tag.name),
+  };
+}

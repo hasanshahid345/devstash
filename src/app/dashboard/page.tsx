@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardLucideIcon } from "@/components/dashboard/lucide-icon";
+import { ItemDrawerCardTrigger, ItemDrawerProvider } from "@/components/items/item-drawer";
 import { getCurrentUser } from "@/lib/current-user";
 import { getDashboardCollectionsData } from "@/lib/db/collections";
 import { getDashboardItemsData, type DashboardItemCard as DashboardItemCardData } from "@/lib/db/items";
@@ -127,6 +128,7 @@ export default async function DashboardPage() {
   ];
 
   return (
+    <ItemDrawerProvider>
     <section className="space-y-8">
       <div className="space-y-1">
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-50">Dashboard</h1>
@@ -223,13 +225,14 @@ export default async function DashboardPage() {
 
           <div className="space-y-4">
             {pinnedItems.map((item) => (
-              <DashboardItemCard
-                key={item.id}
-                item={item}
-                titleClassName="text-lg font-semibold text-zinc-50"
-                showDate
-                cardClassName="bg-black/20"
-              />
+              <ItemDrawerCardTrigger key={item.id} itemId={item.id}>
+                <DashboardItemCard
+                  item={item}
+                  titleClassName="text-lg font-semibold text-zinc-50"
+                  showDate
+                  cardClassName="bg-black/20"
+                />
+              </ItemDrawerCardTrigger>
             ))}
           </div>
         </section>
@@ -239,16 +242,18 @@ export default async function DashboardPage() {
         <h2 className="text-xl font-semibold text-zinc-300">Recent items</h2>
         <div className="grid gap-4 xl:grid-cols-2">
           {recentItems.map((item) => (
-            <DashboardItemCard
-              key={item.id}
-              item={item}
-              titleClassName="text-base font-medium text-zinc-100"
-              showDate={false}
-              cardClassName="bg-black/15"
-            />
+            <ItemDrawerCardTrigger key={item.id} itemId={item.id}>
+              <DashboardItemCard
+                item={item}
+                titleClassName="text-base font-medium text-zinc-100"
+                showDate={false}
+                cardClassName="bg-black/15"
+              />
+            </ItemDrawerCardTrigger>
           ))}
         </div>
       </section>
     </section>
+    </ItemDrawerProvider>
   );
 }
