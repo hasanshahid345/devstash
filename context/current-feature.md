@@ -1,31 +1,14 @@
-# Current Feature: Item Drawer Edit Mode
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add inline edit mode to the existing item drawer when the Edit action is clicked.
-- Replace the drawer action bar with Save and Cancel controls while editing.
-- Save changes through an `updateItem(itemId, data)` server action in `src/actions/items.ts`.
-- Validate the update payload with Zod before database writes.
-- Update item data in `src/lib/db/items.ts`, including disconnecting existing tags and connect-or-creating submitted tags.
-- Return the updated `ItemDetail` after save so the drawer can refresh without a second fetch.
-- Show success and error toast notifications for save attempts.
-- Refresh the route after save so the underlying item cards reflect edits.
 
 ## Notes
 
-- Spec source: `context/features/item-drawer-edit-spec.md`.
-- Edit mode stays inside the same open drawer; there is no navigation to a separate page.
-- Cancel discards local changes and returns to view mode.
-- Editable fields for all item types: title, description, and comma-separated tags.
-- Type-specific editable fields: content for snippet, prompt, command, and note; language for snippet and command; URL for link.
-- Display-only fields in edit mode: item type, collections, created date, and updated date.
-- Keep the form simple with controlled inputs; no form library is needed.
-- Disable Save on the client when the title is empty, but keep server-side Zod validation as the source of truth.
-- The content textarea does not need to be a code editor yet.
 
 ## History
 
@@ -55,3 +38,4 @@ In Progress
 - 2026-06-09: Rate Limiting for Auth completed with a reusable Upstash-backed limiter, protected credentials login, registration, password reset, and verification resend flows, and surfaced friendly rate-limit errors in the sign-in UI. Verified with `cmd /c npm run lint` and `cmd /c npm run build`.
 - 2026-06-09: Items List View completed with the dynamic `/items/[type]` route, type-filtered item listing, and responsive item cards. Verified with `cmd /c npm run build`.
 - 2026-06-09: Vitest unit testing setup completed with Node-based configuration, utility coverage, and a mocked server-action test for `signInWithCredentials`. Verified with `cmd /c npm run test` and `cmd /c npm run build`.
+- 2026-06-15: Item Drawer Edit Mode completed with inline drawer editing, authenticated Zod-validated update action, tag replacement via connect-or-create, updated drawer state, and route refresh after save. Verified with `cmd /c npm run test`, `cmd /c npm run lint`, and `cmd /c npm run build`.
